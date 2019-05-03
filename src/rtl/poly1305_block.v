@@ -4,7 +4,7 @@
 // ---------------------
 //
 //
-// Copyright (c) 2017, Secworks Sweden AB
+// Copyright (c) 2017, Assured AB
 // Joachim Strömbergson
 //
 // Redistribution and use in source and binary forms, with or
@@ -38,11 +38,14 @@ module poly1305_poly_block(
                            input wire          clk,
                            input wire          reset_n,
 
-                           input wire [31 : 0] acc0,
-                           input wire [31 : 0] acc1,
-                           input wire [31 : 0] acc2,
-                           input wire [31 : 0] acc3,
-                           input wire [31 : 0] acc4,
+                           input wire          next,
+                           output wire         ready,
+
+                           input wire [31 : 0] h0,
+                           input wire [31 : 0] h1,
+                           input wire [31 : 0] h2,
+                           input wire [31 : 0] h3,
+                           input wire [31 : 0] h4,
 
                            input wire [31 : 0] c0,
                            input wire [31 : 0] c1,
@@ -50,24 +53,80 @@ module poly1305_poly_block(
                            input wire [31 : 0] c3,
                            input wire [31 : 0] c4,
 
-                           output wire [31 : 0] acc0_new,
-                           output wire [31 : 0] acc1_new,
-                           output wire [31 : 0] acc2_new,
-                           output wire [31 : 0] acc3_new,
-                           output wire [31 : 0] acc4_new
+                           input wire [31 : 0] r0,
+                           input wire [31 : 0] r1,
+                           input wire [31 : 0] r2,
+                           input wire [31 : 0] r3,
+
+                           output wire [31 : 0] h0_new,
+                           output wire [31 : 0] h1_new,
+                           output wire [31 : 0] h2_new,
+                           output wire [31 : 0] h3_new,
+                           output wire [31 : 0] h4_new
                           );
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [63 : 0] mulacc_res_reg;
-  reg [63 : 0] mulacc_res_new;
+  reg [32 : 0] s0_reg;
+  reg [32 : 0] s0_new;
 
+  reg [32 : 0] s1_reg;
+  reg [32 : 0] s1_new;
+
+  reg [32 : 0] s2_reg;
+  reg [32 : 0] s2_new;
+
+  reg [32 : 0] s3_reg;
+  reg [32 : 0] s3_new;
+
+  reg [32 : 0] s4_reg;
+  reg [32 : 0] s4_new;
+
+  reg [31 : 0] rr0_reg;
+  reg [31 : 0] rr0_new;
+
+  reg [63 : 0] x0_reg;
+  reg [63 : 0] x0_reg;
+
+  reg [63 : 0] x1_reg;
+  reg [63 : 0] x1_reg;
+
+  reg [63 : 0] x2_reg;
+  reg [63 : 0] x2_reg;
+
+  reg [63 : 0] x3_reg;
+  reg [63 : 0] x3_reg;
+
+  reg [63 : 0] x4_reg;
+  reg [63 : 0] x4_reg;
+
+  reg [63 : 0] u0_reg;
+  reg [63 : 0] u0_new;
+
+  reg [63 : 0] u1_reg;
+  reg [63 : 0] u1_new;
+
+  reg [63 : 0] u2_reg;
+  reg [63 : 0] u2_new;
+
+  reg [63 : 0] u3_reg;
+  reg [63 : 0] u3_new;
+
+  reg [63 : 0] u4_reg;
+  reg [63 : 0] u4_new;
+
+  reg [31 : 0] u5_reg;
+  reg [31 : 0] u5_new;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign res = mulacc_res_reg;
+  assign h0_new  = u0_reg[31 : 0];
+  assign h1_new  = u1_reg[31 : 0];
+  assign h2_new  = u2_reg[31 : 0];
+  assign h3_new  = u3_reg[31 : 0];
+  assign h4_new  = u4_reg[31 : 0];
 
 
   //----------------------------------------------------------------
@@ -81,32 +140,103 @@ module poly1305_poly_block(
     begin : reg_update
       if (!reset_n)
         begin
-          mulacc_res_reg <= 64'h0;
+          s0_reg  <= 33'h0;
+          s1_reg  <= 33'h0;
+          s2_reg  <= 33'h0;
+          s3_reg  <= 33'h0;
+          s4_reg  <= 33'h0;
+
+          rr0_reg <= 32'h0;
+          rr1_reg <= 32'h0;
+          rr2_reg <= 32'h0;
+          rr3_reg <= 32'h0;
+
+          x0_reg  <= 64'h0;
+          x1_reg  <= 64'h0;
+          x2_reg  <= 64'h0;
+          x3_reg  <= 64'h0;
+          x4_reg  <= 64'h0;
+
+          u0_reg  <= 64'h0;
+          u1_reg  <= 64'h0;
+          u2_reg  <= 64'h0;
+          u3_reg  <= 64'h0;
+          u4_reg  <= 64'h0;
+          5_reg   <= 32'h0;
         end
       else
         begin
-          if (update)
-            mulacc_res_reg <= mulacc_res_new;
+          s0_reg <= s0_new;
+          s1_reg <= s1_new;
+          s2_reg <= s2_new;
+          s3_reg <= s3_new;
+          s4_reg <= s4_new;
+
+          rr0_reg <= rr0_new;
+          rr1_reg <= rr1_new;
+          rr2_reg <= rr2_new;
+          rr3_reg <= rr3_new;
+
+          x0_reg <= x0_new;
+          x1_reg <= x1_new;
+          x2_reg <= x2_new;
+          x3_reg <= x3_new;
+          x4_reg <= x4_new;
+
+          u0_reg <= u0_new;
+          u1_reg <= u1_new;
+          u2_reg <= u2_new;
+          u3_reg <= u3_new;
+          u4_reg <= u4_new;
+          u5_reg <= u5_new;
         end
     end // reg_update
 
 
   //----------------------------------------------------------------
-  // mac_logic
+  // block_logic
   //----------------------------------------------------------------
   always @*
-    begin : mac_logic
-      reg [63 : 0] mul_res;
-      reg [63 : 0] mux_addop;
+    begin : block_logic
+      // s = h + c, no carry propagation.
+      s0_new = h0 + c0;
+      s1_new = h1 + c1;
+      s2_new = h2 + c2;
+      s3_new = h3 + c3;
+      s4_new = h4 + c4;
 
-      mul_res = opa * opb;
 
-      if (init)
-        mux_addop = 64'h0;
-      else
-        mux_addop = mulacc_res_reg;
+      // Multiply r.
+      rr0_new = {2'h0, r0[31 : 2]} * 32'h5;
+      rr1_new = {2'h0, r1[31 : 2]} + r1;
+      rr2_new = {2'h0, r2[31 : 2]} + r2;
+      rr3_new = {2'h0, r3[31 : 2]} + r3;
 
-      mulacc_res_new = mul_res + mux_addop;
+
+      // Big mult-add trees.
+      // To be optimized.
+      x0_new = (s0_reg * r0) + (s1_reg * rr3_reg) + (s2_reg * rr2_reg) +
+               (s3_reg *rr1_reg) + (s4_reg * rr0_reg);
+
+      x1_new = (s0_reg * r1) + (s1_reg * r0)  + (s2_reg * rr3_reg) +
+               (s3_reg * rr2_reg) + (s4_reg * rr1_reg);
+
+      x2_new = (s0_reg * r2) + (s1_ewg * r1) + (s2_reg * r0) +
+               (s3_reg * rr3_reg) + (s4_reg * rr2_reg);
+
+      x3_new = (s0_reg * r3) + (s1_reg * r2) + (s2_reg * r1) +
+               (s3_reg * r0)  + (s4_reg * rr3_reg);
+
+      x4_new = s4_reg * (r0 & 32'h3);
+
+
+      // partial reduction modulo 2^130 - 5
+      u5_new = x4_reg + (x3_reg[63 : 32]);
+      u0_new = (u5_reg >>  2) * 5 + (x0 & 0xffffffff);
+      u1_new = (u0reg >> 32)     + (x1 & 0xffffffff) + (x0 >> 32);
+      u2_new = (u1reg >> 32)     + (x2 & 0xffffffff) + (x1 >> 32);
+      u3_new = (u2reg >> 32)     + (x3 & 0xffffffff) + (x2 >> 32);
+      u4_new = (u3reg >> 32)     + (u5 & 3);
     end
 
 endmodule // poly1305_mulacc
