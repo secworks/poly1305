@@ -225,6 +225,10 @@ module tb_poly1305_block();
 
 
   //----------------------------------------------------------------
+  // test_aa;
+  //
+  // A very simple test case that sets all inputs to a known,
+  // not all zero or not all one bit pattern.
   //----------------------------------------------------------------
   task test_aa;
     begin : test_aa
@@ -253,6 +257,39 @@ module tb_poly1305_block();
 
 
   //----------------------------------------------------------------
+  // test_rfc8349;
+  //
+  // Test case that uses the test vectors from RFC 8349,
+  // section 2.5.2:
+  // https://tools.ietf.org/html/rfc8439#section-2.5.2
+  //----------------------------------------------------------------
+  task test_aa;
+    begin : test_rfc8349
+      tb_h0 = 32'haaaaaaaa;
+      tb_h1 = 32'haaaaaaaa;
+      tb_h2 = 32'haaaaaaaa;
+      tb_h3 = 32'haaaaaaaa;
+      tb_h4 = 32'haaaaaaaa;
+
+      tb_c0 = 32'haaaaaaaa;
+      tb_c1 = 32'haaaaaaaa;
+      tb_c2 = 32'haaaaaaaa;
+      tb_c3 = 32'haaaaaaaa;
+      tb_c4 = 32'haaaaaaaa;
+
+      tb_r0 = 32'haaaaaaaa;
+      tb_r1 = 32'haaaaaaaa;
+      tb_r2 = 32'haaaaaaaa;
+      tb_r3 = 32'haaaaaaaa;
+
+      tb_debug = 1;
+      #(100 * CLK_PERIOD);
+      tb_debug = 0;
+    end
+  endtask // test_rfc8349
+
+
+  //----------------------------------------------------------------
   // poly1305_block_test
   //----------------------------------------------------------------
   initial
@@ -265,6 +302,7 @@ module tb_poly1305_block();
       dump_dut_state();
 
       test_aa();
+      test_rfc8349();
 
       display_test_result();
 
