@@ -86,20 +86,29 @@ module poly1305_block(
   reg [31 : 0] rr0_reg;
   reg [31 : 0] rr0_new;
 
+  reg [31 : 0] rr1_reg;
+  reg [31 : 0] rr1_new;
+
+  reg [31 : 0] rr2_reg;
+  reg [31 : 0] rr2_new;
+
+  reg [31 : 0] rr3_reg;
+  reg [31 : 0] rr3_new;
+
   reg [63 : 0] x0_reg;
-  reg [63 : 0] x0_reg;
+  reg [63 : 0] x0_new;
 
   reg [63 : 0] x1_reg;
-  reg [63 : 0] x1_reg;
+  reg [63 : 0] x1_new;
 
   reg [63 : 0] x2_reg;
-  reg [63 : 0] x2_reg;
+  reg [63 : 0] x2_new;
 
   reg [63 : 0] x3_reg;
-  reg [63 : 0] x3_reg;
+  reg [63 : 0] x3_new;
 
   reg [63 : 0] x4_reg;
-  reg [63 : 0] x4_reg;
+  reg [63 : 0] x4_new;
 
   reg [63 : 0] u0_reg;
   reg [63 : 0] u0_new;
@@ -162,7 +171,7 @@ module poly1305_block(
           u2_reg  <= 64'h0;
           u3_reg  <= 64'h0;
           u4_reg  <= 64'h0;
-          5_reg   <= 32'h0;
+          u5_reg  <= 32'h0;
         end
       else
         begin
@@ -221,7 +230,7 @@ module poly1305_block(
       x1_new = (s0_reg * r1) + (s1_reg * r0)  + (s2_reg * rr3_reg) +
                (s3_reg * rr2_reg) + (s4_reg * rr1_reg);
 
-      x2_new = (s0_reg * r2) + (s1_ewg * r1) + (s2_reg * r0) +
+      x2_new = (s0_reg * r2) + (s1_reg * r1) + (s2_reg * r0) +
                (s3_reg * rr3_reg) + (s4_reg * rr2_reg);
 
       x3_new = (s0_reg * r3) + (s1_reg * r2) + (s2_reg * r1) +

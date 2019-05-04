@@ -263,7 +263,7 @@ module tb_poly1305_block();
   // section 2.5.2:
   // https://tools.ietf.org/html/rfc8439#section-2.5.2
   //----------------------------------------------------------------
-  task test_aa;
+  task test_rfc8349;
     begin : test_rfc8349
       tb_h0 = 32'haaaaaaaa;
       tb_h1 = 32'haaaaaaaa;
