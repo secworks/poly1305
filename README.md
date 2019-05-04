@@ -13,5 +13,7 @@ code (MAC) function. The core is written in Verilog 2001.
 
 ## References
 [1] https://en.wikipedia.org/wiki/Poly1305
+
 [2] https://tools.ietf.org/html/rfc8439
-[2] http://loup-vaillant.fr/tutorials/poly1305-design
+
+[3] http://loup-vaillant.fr/tutorials/poly1305-design
