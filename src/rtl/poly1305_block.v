@@ -231,12 +231,12 @@ module poly1305_poly_block(
 
 
       // partial reduction modulo 2^130 - 5
-      u5_new = x4_reg + (x3_reg[63 : 32]);
-      u0_new = (u5_reg >>  2) * 5 + (x0 & 0xffffffff);
-      u1_new = (u0reg >> 32)     + (x1 & 0xffffffff) + (x0 >> 32);
-      u2_new = (u1reg >> 32)     + (x2 & 0xffffffff) + (x1 >> 32);
-      u3_new = (u2reg >> 32)     + (x3 & 0xffffffff) + (x2 >> 32);
-      u4_new = (u3reg >> 32)     + (u5 & 3);
+      u5_new = x4_reg + x3_reg[63 : 32];
+      u0_new = ({2'h0, u5_reg[31 : 2]} * 5) + x0_reg[31 : 0];
+      u1_new = u0_reg[63 : 32] + x1_reg[31 : 0] + x0_reg[63 : 0];
+      u2_new = u1_reg[63 : 32] + x2_reg[31 : 0] + x1_reg[63 : 0];
+      u3_new = u2_reg[63 : 32] + x3_reg[31 : 0] + x2_reg[63 : 0];
+      u4_new = u3_reg[63 : 32] + u5_reg & 32'h3;
     end
 
 endmodule // poly1305_mulacc
