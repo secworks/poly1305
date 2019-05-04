@@ -34,36 +34,36 @@
 //
 //======================================================================
 
-module poly1305_poly_block(
-                           input wire          clk,
-                           input wire          reset_n,
+module poly1305_block(
+                      input wire          clk,
+                      input wire          reset_n,
 
-                           input wire          next,
-                           output wire         ready,
+                      input wire          next,
+                      output wire         ready,
 
-                           input wire [31 : 0] h0,
-                           input wire [31 : 0] h1,
-                           input wire [31 : 0] h2,
-                           input wire [31 : 0] h3,
-                           input wire [31 : 0] h4,
+                      input wire [31 : 0] h0,
+                      input wire [31 : 0] h1,
+                      input wire [31 : 0] h2,
+                      input wire [31 : 0] h3,
+                      input wire [31 : 0] h4,
 
-                           input wire [31 : 0] c0,
-                           input wire [31 : 0] c1,
-                           input wire [31 : 0] c2,
-                           input wire [31 : 0] c3,
-                           input wire [31 : 0] c4,
+                      input wire [31 : 0] c0,
+                      input wire [31 : 0] c1,
+                      input wire [31 : 0] c2,
+                      input wire [31 : 0] c3,
+                      input wire [31 : 0] c4,
 
-                           input wire [31 : 0] r0,
-                           input wire [31 : 0] r1,
-                           input wire [31 : 0] r2,
-                           input wire [31 : 0] r3,
+                      input wire [31 : 0] r0,
+                      input wire [31 : 0] r1,
+                      input wire [31 : 0] r2,
+                      input wire [31 : 0] r3,
 
-                           output wire [31 : 0] h0_new,
-                           output wire [31 : 0] h1_new,
-                           output wire [31 : 0] h2_new,
-                           output wire [31 : 0] h3_new,
-                           output wire [31 : 0] h4_new
-                          );
+                      output wire [31 : 0] h0_new,
+                      output wire [31 : 0] h1_new,
+                      output wire [31 : 0] h2_new,
+                      output wire [31 : 0] h3_new,
+                      output wire [31 : 0] h4_new
+                     );
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -237,10 +237,10 @@ module poly1305_poly_block(
       u2_new = u1_reg[63 : 32] + x2_reg[31 : 0] + x1_reg[63 : 0];
       u3_new = u2_reg[63 : 32] + x3_reg[31 : 0] + x2_reg[63 : 0];
       u4_new = u3_reg[63 : 32] + u5_reg & 32'h3;
-    end
+    end // block_logic
 
-endmodule // poly1305_mulacc
+endmodule // poly1305_block
 
 //======================================================================
-// EOF poly1305_mulacc.v
+// EOF poly1305_block.v
 //======================================================================
