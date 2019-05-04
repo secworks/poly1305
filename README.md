@@ -3,7 +3,7 @@ Hardware implementation of the Poly1305 message authentication functiomn.
 
 
 ## Status
-Just started. Not completed. Does not work.
+Just started. Not completed. **Does not work**.
 
 
 ## Introduction
@@ -13,5 +13,5 @@ code (MAC) function. The core is written in Verilog 2001.
 
 ## References
 [1] https://en.wikipedia.org/wiki/Poly1305
-[2] https://tools.ietf.org/html/rfc7539
+[2] https://tools.ietf.org/html/rfc8439
 [2] http://loup-vaillant.fr/tutorials/poly1305-design
