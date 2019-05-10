@@ -128,6 +128,7 @@ module poly1305_block(
   reg [31 : 0] u5_reg;
   reg [31 : 0] u5_new;
 
+
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
@@ -225,7 +226,7 @@ module poly1305_block(
       // Big mult-add trees.
       // To be optimized.
       x0_new = (s0_reg * r0) + (s1_reg * rr3_reg) + (s2_reg * rr2_reg) +
-               (s3_reg *rr1_reg) + (s4_reg * rr0_reg);
+               (s3_reg * rr1_reg) + (s4_reg * rr0_reg);
 
       x1_new = (s0_reg * r1) + (s1_reg * r0)  + (s2_reg * rr3_reg) +
                (s3_reg * rr2_reg) + (s4_reg * rr1_reg);
@@ -236,15 +237,15 @@ module poly1305_block(
       x3_new = (s0_reg * r3) + (s1_reg * r2) + (s2_reg * r1) +
                (s3_reg * r0)  + (s4_reg * rr3_reg);
 
-      x4_new = s4_reg * (r0 & 32'h3);
+      x4_new = s4_reg * {32'h0, (r0 & 32'h3)};
 
 
       // partial reduction modulo 2^130 - 5
-      u5_new = x4_reg + x3_reg[63 : 32];
-      u0_new = ({2'h0, u5_reg[31 : 2]} * 5) + x0_reg[31 : 0];
-      u1_new = u0_reg[63 : 32] + x1_reg[31 : 0] + x0_reg[63 : 0];
-      u2_new = u1_reg[63 : 32] + x2_reg[31 : 0] + x1_reg[63 : 0];
-      u3_new = u2_reg[63 : 32] + x3_reg[31 : 0] + x2_reg[63 : 0];
+      u5_new = (x4_reg + {32'h0, x3_reg[63 : 32]});
+      u0_new = ({2'h0, u5_reg[31 : 2]} * 5) + {32'H0, x0_reg[31 : 0]};
+      u1_new = u0_reg[63 : 32] + x1_reg[31 : 0] + x0_reg[63 : 32];
+      u2_new = u1_reg[63 : 32] + x2_reg[31 : 0] + x1_reg[63 : 32];
+      u3_new = u2_reg[63 : 32] + x3_reg[31 : 0] + x2_reg[63 : 32];
       u4_new = u3_reg[63 : 32] + u5_reg & 32'h3;
     end // block_logic
 
