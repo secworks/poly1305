@@ -52,39 +52,39 @@ module poly1305_core(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [31 : 0] h0_reg;
-  reg [31 : 0] h0_new;
-  reg [31 : 0] h1_reg;
-  reg [31 : 0] h1_new;
-  reg [31 : 0] h2_reg;
-  reg [31 : 0] h2_new;
-  reg [31 : 0] h3_reg;
-  reg [31 : 0] h3_new;
-  reg [31 : 0] h4_reg;
-  reg [31 : 0] h4_new;
-  reg          h_we;
+  reg [31 : 0]  h0_reg;
+  wire [31 : 0] h0_new;
+  reg [31 : 0]  h1_reg;
+  wire [31 : 0] h1_new;
+  reg [31 : 0]  h2_reg;
+  wire [31 : 0] h2_new;
+  reg [31 : 0]  h3_reg;
+  wire [31 : 0] h3_new;
+  reg [31 : 0]  h4_reg;
+  wire [31 : 0] h4_new;
+  reg           h_we;
 
-  reg [31 : 0] c0_reg;
-  reg [31 : 0] c0_new;
-  reg [31 : 0] c1_reg;
-  reg [31 : 0] c1_new;
-  reg [31 : 0] c2_reg;
-  reg [31 : 0] c2_new;
-  reg [31 : 0] c3_reg;
-  reg [31 : 0] c3_new;
-  reg [31 : 0] c4_reg;
-  reg [31 : 0] c4_new;
-  reg          c_we;
+  reg [31 : 0]  c0_reg;
+  reg [31 : 0]  c0_new;
+  reg [31 : 0]  c1_reg;
+  reg [31 : 0]  c1_new;
+  reg [31 : 0]  c2_reg;
+  reg [31 : 0]  c2_new;
+  reg [31 : 0]  c3_reg;
+  reg [31 : 0]  c3_new;
+  reg [31 : 0]  c4_reg;
+  reg [31 : 0]  c4_new;
+  reg           c_we;
 
-  reg [31 : 0] r0_reg;
-  reg [31 : 0] r0_new;
-  reg [31 : 0] r1_reg;
-  reg [31 : 0] r1_new;
-  reg [31 : 0] r2_reg;
-  reg [31 : 0] r2_new;
-  reg [31 : 0] r3_reg;
-  reg [31 : 0] r3_new;
-  reg          r_we;
+  reg [31 : 0]  r0_reg;
+  reg [31 : 0]  r0_new;
+  reg [31 : 0]  r1_reg;
+  reg [31 : 0]  r1_new;
+  reg [31 : 0]  r2_reg;
+  reg [31 : 0]  r2_new;
+  reg [31 : 0]  r3_reg;
+  reg [31 : 0]  r3_new;
+  reg           r_we;
 
 
   //----------------------------------------------------------------
@@ -102,31 +102,31 @@ module poly1305_core(
   //----------------------------------------------------------------
   // Module instantiations.
   //----------------------------------------------------------------
-  poly1305_block pblock(
-                        .clk(clk),
-                        .reset_n(reset_n),
-                        .next(pblock_next),
-                        .ready(pblock_ready),
-                        .h0(h0_reg),
-                        .h1(h1_reg),
-                        .h2(h2_reg),
-                        .h3(h3_reg),
-                        .h4(h4_reg),
-                        .c0(c0_reg),
-                        .c1(c1_reg),
-                        .c2(c2_reg),
-                        .c3(c3_reg),
-                        .c4(c4_reg),
-                        .r0(r0_reg),
-                        .r1(r1_reg),
-                        .r2(r2_reg),
-                        .r3(r3_reg),
-                        .h0_new(h0_new),
-                        .h1_new(h1_new),
-                        .h2_new(h2_new),
-                        .h3_new(h3_new),
-                        .h4_new(h4_new)
-                     );
+  poly1305_pblock pblock(
+                         .clk(clk),
+                         .reset_n(reset_n),
+                         .next(pblock_next),
+                         .ready(pblock_ready),
+                         .h0(h0_reg),
+                         .h1(h1_reg),
+                         .h2(h2_reg),
+                         .h3(h3_reg),
+                         .h4(h4_reg),
+                         .c0(c0_reg),
+                         .c1(c1_reg),
+                         .c2(c2_reg),
+                         .c3(c3_reg),
+                         .c4(c4_reg),
+                         .r0(r0_reg),
+                         .r1(r1_reg),
+                         .r2(r2_reg),
+                         .r3(r3_reg),
+                         .h0_new(h0_new),
+                         .h1_new(h1_new),
+                         .h2_new(h2_new),
+                         .h3_new(h3_new),
+                         .h4_new(h4_new)
+                        );
 
 
   //----------------------------------------------------------------
@@ -156,7 +156,6 @@ module poly1305_core(
           r1_reg <= 32'h0;
           r2_reg <= 32'h0;
           r3_reg <= 32'h0;
-          r4_reg <= 32'h0;
         end
       else
         begin
