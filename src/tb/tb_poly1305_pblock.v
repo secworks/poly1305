@@ -216,13 +216,30 @@ module tb_poly1305_pblock();
   task init_sim;
     begin
       $display("*** Initializing the simulation.");
-      cycle_ctr = 0;
-      error_ctr = 0;
-      tc_ctr    = 0;
-      tb_debug  = 0;
+      cycle_ctr  = 0;
+      error_ctr  = 0;
+      tc_ctr     = 0;
+      tb_debug   = 0;
 
       tb_clk     = 0;
       tb_reset_n = 1;
+
+      tb_h0      = 32'h0;
+      tb_h1      = 32'h0;
+      tb_h2      = 32'h0;
+      tb_h3      = 32'h0;
+      tb_h4      = 32'h0;
+
+      tb_c0      = 32'h0;
+      tb_c1      = 32'h0;
+      tb_c2      = 32'h0;
+      tb_c3      = 32'h0;
+      tb_c4      = 32'h0;
+
+      tb_r0      = 32'h0;
+      tb_r1      = 32'h0;
+      tb_r2      = 32'h0;
+      tb_r3      = 32'h0;
     end
   endtask // init_sim
 
