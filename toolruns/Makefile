@@ -42,6 +42,9 @@ TB_PBLOCK_SRC =../src/tb/tb_poly1305_pblock.v
 CORE_SRC =../src/rtl/poly1305_core.v $(PBLOCK_SRC)
 TB_CORE_SRC =../src/tb/tb_poly1305_core.v
 
+TOP_SRC =../src/rtl/poly1305.v $(CORE_SRC)
+TB_TOP_SRC =../src/tb/tb_poly1305.v
+
 
 CC=iverilog
 CC_FLAGS= -Wall
@@ -50,7 +53,11 @@ LINT=verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
-all: core.sim pblock.sim
+all: top.sim core.sim pblock.sim
+
+
+top.sim: $(TB_TOP_SRC) $(TOP_SRC)
+	$(CC) $(CC_FLAGS) -o top.sim $(TB_TOP_SRC) $(TOP_SRC)
 
 
 core.sim: $(TB_CORE_SRC) $(CORE_SRC)
@@ -61,6 +68,10 @@ pblock.sim: $(TB_PBLOCK_SRC) $(PBLOCK_SRC)
 	$(CC) $(CC_FLAGS) -o pblock.sim $(TB_PBLOCK_SRC) $(PBLOCK_SRC)
 
 
+sim-top: top.sim
+	./top.sim
+
+
 sim-core: core.sim
 	./core.sim
 
@@ -69,12 +80,13 @@ sim-pblock: pblock.sim
 	./pblock.sim
 
 
-lint:  $(CORE_SRC)
-	$(LINT) $(LINT_FLAGS) $(CORE_SRC)
+lint:  $(TOP_SRC)
+	$(LINT) $(LINT_FLAGS) $(TOP_SRC)
 
 
 
 clean:
+	rm -f top.sim
 	rm -f core.sim
 	rm -f pblock.sim
 
@@ -83,8 +95,10 @@ help:
 	@echo "Supported targets:"
 	@echo "------------------"
 	@echo "all:        Build all simulation targets."
-	@echo "core:       Build Poly1305 core simulation target."
-	@echo "pblock:     Build Poly1305 poly block simulation target."
+	@echo "top.sim:    Build Poly1305 top level simulation target."
+	@echo "core.sim:   Build Poly1305 core simulation target."
+	@echo "pblock.sim: Build Poly1305 poly block simulation target."
+	@echo "sim-top:    Run Poly1305 top level simulation."
 	@echo "sim-core:   Run Poly1305 core simulation."
 	@echo "sim-pblock: Run Poly1305 poly block simulation."
 	@echo "lint:       Lint the RTL source."
