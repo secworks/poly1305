@@ -58,11 +58,12 @@ module poly1305(
   localparam ADDR_CTRL        = 8'h08;
   localparam CTRL_INIT_BIT    = 0;
   localparam CTRL_NEXT_BIT    = 1;
-  localparam CTRL_DONE_BIT    = 2;
+  localparam CTRL_FINISH_BIT  = 2;
 
   localparam ADDR_STATUS      = 8'h09;
   localparam STATUS_READY_BIT = 0;
-  localparam STATUS_VALID_BIT = 1;
+
+  localparam ADDR_BLOCKLEN    = 8'h0a;
 
   localparam ADDR_KEY0        = 8'h10;
   localparam ADDR_KEY7        = 8'h17;
@@ -87,14 +88,19 @@ module poly1305(
   reg next_reg;
   reg next_new;
 
-  reg [31 : 0] block_reg [0 : 3];
-  reg          block_we;
+  reg finish_reg;
+  reg finish_new;
 
-  reg [31 : 0] key_reg [0 : 7];
-  reg          key_we;
+  reg [4 : 0]   blocklen_reg;
+  reg           blocklen_we;
 
-  reg [127 : 0] tag_reg;
-  reg           valid_reg;
+  reg [31 : 0]  block_reg [0 : 3];
+  reg           block_we;
+
+  reg [31 : 0]  key_reg [0 : 7];
+  reg           key_we;
+
+  reg [127 : 0] mac_reg;
   reg           ready_reg;
 
 
@@ -103,13 +109,10 @@ module poly1305(
   //----------------------------------------------------------------
   reg [31 : 0]   tmp_read_data;
 
-  wire           core_init;
-  wire           core_next;
   wire           core_ready;
-  wire           core_valid;
   wire [255 : 0] core_key;
   wire [127 : 0] core_block;
-  wire [127 : 0] core_tag;
+  wire [127 : 0] core_mac;
 
 
   //----------------------------------------------------------------
@@ -120,15 +123,25 @@ module poly1305(
   assign core_key = {key_reg[0], key_reg[1], key_reg[2], key_reg[3],
                      key_reg[4], key_reg[5], key_reg[6], key_reg[7]};
 
-  assign core_block  = {block_reg[0], block_reg[1],
-                        block_reg[2], block_reg[3]};
-  assign core_init   = init_reg;
-  assign core_next   = next_reg;
+  assign core_block = {block_reg[0], block_reg[1],
+                       block_reg[2], block_reg[3]};
 
 
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
+  poly1305_core core(
+                     .clk(clk),
+                     .reset_n(reset_n),
+                     .init(init_reg),
+                     .next(next_reg),
+                     .finish(finish_reg),
+                     .ready(core_ready),
+                     .key(core_key),
+                     .block(core_block),
+                     .blocklen(blocklen_reg),
+                     .mac(core:_mac)
+                    );
 
 
   //----------------------------------------------------------------
@@ -149,19 +162,22 @@ module poly1305(
           for (i = 0 ; i < 8 ; i = i + 1)
             key_reg[i] <= 32'h0;
 
-          init_reg  <= 1'b0;
-          next_reg  <= 1'b0;
-          tag_reg   <= 128'h0;
-          valid_reg <= 1'b0;
-          ready_reg <= 1'b0;
+          blocklen_reg <= 5'h0;
+          init_reg     <= 1'b0;
+          next_reg     <= 1'b0;
+          mac_reg      <= 128'h0;
+          ready_reg    <= 1'b0;
         end
       else
         begin
           ready_reg  <= core_ready;
-          valid_reg  <= core_valid;
           result_reg <= core_result;
           init_reg   <= init_new;
           next_reg   <= next_new;
+          finish_reg <= final_new;
+
+          if (blocklen_we)
+            blocklen_reg <= write_data[4 : 0];
 
           if (key_we)
             key_reg[address[2 : 0]] <= write_data;
@@ -181,6 +197,8 @@ module poly1305(
     begin : api
       init_new      = 1'b0;
       next_new      = 1'b0;
+      finish_new    = 1'b0;
+      blocklen_we   = 1'b0;
       key_we        = 1'b0;
       block_we      = 1'b0;
       tmp_read_data = 32'h0;
@@ -191,9 +209,13 @@ module poly1305(
             begin
               if (address == ADDR_CTRL)
                 begin
-                  init_new = write_data[CTRL_INIT_BIT];
-                  next_new = write_data[CTRL_NEXT_BIT];
+                  init_new  = write_data[CTRL_INIT_BIT];
+                  next_new  = write_data[CTRL_NEXT_BIT];
+                  final_new = write_data[CTRL_FINAL_BIT];
                 end
+
+              if (ADDR_BLOCKLEN)
+                blocklen_we = 1'h1;
 
               if ((address >= ADDR_KEY0) && (address <= ADDR_KEY7))
                 key_we = 1'b1;
@@ -204,17 +226,17 @@ module poly1305(
 
           else
             begin
-              case (address)
-                ADDR_NAME0:   tmp_read_data = CORE_NAME0;
-                ADDR_NAME1:   tmp_read_data = CORE_NAME1;
-                ADDR_VERSION: tmp_read_data = CORE_VERSION;
-                ADDR_CTRL:    tmp_read_data = {30'h0, next_reg, init_reg};
-                ADDR_STATUS:  tmp_read_data = {30'h0, valid_reg, ready_reg};
+              if (address == ADDR_NAME0)
+                tmp_read_data = CORE_NAME0;
 
-                default:
-                  begin
-                  end
-              endcase // case (address)
+              if (address == ADDR_NAME1)
+                tmp_read_data = CORE_NAME1;
+
+              if (address == ADDR_VERSION)
+                tmp_read_data = CORE_VERSION;
+
+              if (ADDR_STATUS)
+                tmp_read_data = {31'h0, ready_reg};
 
               if ((address >= ADDR_TAG0) && (address <= ADDR_TAG3))
                 tmp_read_data = result_reg[(3 - (address - ADDR_TAG0)) * 32 +: 32];

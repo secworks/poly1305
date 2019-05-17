@@ -39,11 +39,14 @@ module poly1305_core(
                      input wire           reset_n,
 
                      input wire           init,
-                     input wire           update,
+                     input wire           next,
                      input wire           finish,
 
+                     output wire          ready,
+
                      input wire [255 : 0] key,
-                     input wire [255 : 0] chunk,
+                     input wire [127 : 0] block,
+                     input wire [4 : 0]   blocklen,
 
                      output wire [127 : 0] mac
                     );
@@ -52,15 +55,15 @@ module poly1305_core(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [31 : 0]  h0_reg;
+  reg  [31 : 0] h0_reg;
   wire [31 : 0] h0_new;
-  reg [31 : 0]  h1_reg;
+  reg  [31 : 0] h1_reg;
   wire [31 : 0] h1_new;
-  reg [31 : 0]  h2_reg;
+  reg  [31 : 0] h2_reg;
   wire [31 : 0] h2_new;
-  reg [31 : 0]  h3_reg;
+  reg  [31 : 0] h3_reg;
   wire [31 : 0] h3_new;
-  reg [31 : 0]  h4_reg;
+  reg  [31 : 0] h4_reg;
   wire [31 : 0] h4_new;
   reg           h_we;
 
