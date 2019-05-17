@@ -140,7 +140,7 @@ module poly1305(
                      .key(core_key),
                      .block(core_block),
                      .blocklen(blocklen_reg),
-                     .mac(core:_mac)
+                     .mac(core_mac)
                     );
 
 
@@ -171,10 +171,9 @@ module poly1305(
       else
         begin
           ready_reg  <= core_ready;
-          result_reg <= core_result;
           init_reg   <= init_new;
           next_reg   <= next_new;
-          finish_reg <= final_new;
+          finish_reg <= finish_new;
 
           if (blocklen_we)
             blocklen_reg <= write_data[4 : 0];
@@ -209,9 +208,9 @@ module poly1305(
             begin
               if (address == ADDR_CTRL)
                 begin
-                  init_new  = write_data[CTRL_INIT_BIT];
-                  next_new  = write_data[CTRL_NEXT_BIT];
-                  final_new = write_data[CTRL_FINAL_BIT];
+                  init_new   = write_data[CTRL_INIT_BIT];
+                  next_new   = write_data[CTRL_NEXT_BIT];
+                  finish_new = write_data[CTRL_FINISH_BIT];
                 end
 
               if (ADDR_BLOCKLEN)
@@ -239,7 +238,7 @@ module poly1305(
                 tmp_read_data = {31'h0, ready_reg};
 
               if ((address >= ADDR_TAG0) && (address <= ADDR_TAG3))
-                tmp_read_data = result_reg[(3 - (address - ADDR_TAG0)) * 32 +: 32];
+                tmp_read_data = core_mac[(3 - (address - ADDR_TAG0)) * 32 +: 32];
             end
         end
     end // addr_decoder
