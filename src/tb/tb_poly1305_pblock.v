@@ -305,6 +305,8 @@ module tb_poly1305_pblock();
   //----------------------------------------------------------------
   task test_rfc8349;
     begin : test_rfc8349
+      $display("*** test_rfc8349 started.\n");
+
       tb_h0 = 32'h344b30de;
       tb_h1 = 32'hcccfb4ea;
       tb_h2 = 32'hb0337fa7;
@@ -325,6 +327,8 @@ module tb_poly1305_pblock();
       tb_debug = 1;
       #(30 * CLK_PERIOD);
       tb_debug = 0;
+
+      $display("*** test_rfc8349 started.\n");
     end
   endtask // test_rfc8349
 
