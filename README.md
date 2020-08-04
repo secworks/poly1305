@@ -1,5 +1,5 @@
 # poly1305
-Hardware implementation of the Poly1305 message authentication functiomn.
+Hardware implementation of the Poly1305 message authentication function.
 
 
 ## Status
@@ -9,6 +9,8 @@ Just started. Not completed. **Does not work**.
 ## Introduction
 This is a hardware implementation of the Poly1305 message authentication
 code (MAC) function. The core is written in Verilog 2001.
+
+The core is functionally tested against the Poly1305 model in Monocypher [3].
 
 
 ## References
