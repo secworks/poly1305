@@ -1,5 +1,6 @@
 # Gitignore for Poly1305
 ## Generated files
+test_poly1305
 *.sim
 
 ## Log files
