@@ -52,6 +52,31 @@ void print_hexdata(uint8_t *data, uint32_t len) {
 
 
 //------------------------------------------------------------------
+// check_tag()
+// Check the generated tag against an expected tag.
+// The tag is expected to be 16 bytes.
+//------------------------------------------------------------------
+void check_tag(uint8_t *tag, uint8_t *expected) {
+  uint8_t correct = 1;
+  for (uint8_t i = 0 ; i < 16 ; i++) {
+    if (tag[i] != expected[i])
+      correct = 0;
+  }
+
+  if (correct) {
+    printf("Correct tag generated.\n");
+  }
+  else {
+    printf("Correct tag NOT generated.\n");
+    printf("Expected:\n");
+    print_hexdata(&expected[0], 16);
+    printf("Got:\n");
+    print_hexdata(&tag[0], 16);
+  }
+}
+
+
+//------------------------------------------------------------------
 // p1305_rfc8439()
 //
 // Test with the test vectors from RFC 8439.
@@ -71,6 +96,9 @@ void p1305_rfc8439() {
                                   0x61, 0x72, 0x63, 0x68, 0x20, 0x47, 0x72, 0x6f,
                                   0x75, 0x70};
 
+  uint8_t my_expected[16] = {0xa8, 0x06, 0x1d, 0xc1, 0x30, 0x51, 0x36, 0xc6,
+                             0xc2, 0x2b, 0x8b, 0xaf, 0x0c, 0x01, 0x27, 0xa9};
+
   uint8_t my_tag[16];
   crypto_poly1305_ctx my_ctx;
 
@@ -80,10 +108,8 @@ void p1305_rfc8439() {
   crypto_poly1305_update(&my_ctx, &my_message[0], 34);
   crypto_poly1305_final(&my_ctx, &my_tag[0]);
 
-  printf("Generated tag, \n");
-  print_hexdata(&my_tag[0], 16);
+  check_tag(&my_tag[0], &my_expected[0]);
   printf("\n");
-
 }
 
 
