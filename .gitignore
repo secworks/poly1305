@@ -1,0 +1,7 @@
+# Gitignore for Poly1305
+## Generated files
+*.sim
+
+## Log files
+*.log
+

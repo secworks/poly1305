@@ -1,7 +1,8 @@
 //======================================================================
-// experiment.c
-// -------------
-// A simple experiment to test the Monocypher Poly 1305 implementation.
+//
+// test_poly1305.c
+// ---------------
+// A program to generate test data for Poly1305 using Monocypher.
 //
 // (c) 2020 Joachim Strombergson.
 //
