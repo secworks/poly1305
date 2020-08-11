@@ -47,7 +47,6 @@ import sys
 #-------------------------------------------------------------------
 #-------------------------------------------------------------------
 def load_vectors(filename):
-    print("Loading vectors from '%s'" % filename)
     l = []
     with open(filename,'r') as f:
         for line in f:
@@ -72,13 +71,69 @@ def parse_vectors(vlist):
 
 
 #-------------------------------------------------------------------
-# main()
+#-------------------------------------------------------------------
+def gen_c_code(vset):
+    for i in range(len(vset)):
+        gen_c_structs(i, vset[i])
+
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+def print_hexbytes(disp, data):
+    disp_str = " " * disp
+
+    print("{", end='')
+    i = 0
+    while i < len(data):
+        print("0x%c%c, " % (data[i], data[i + 1]), end='')
+        i += 2
+        if (i > 0) and (i % 16 == 0):
+            print("")
+            print(disp_str + " ", end='')
+    print("};")
+
+
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
+def gen_c_structs(i, v):
+    k, dl, d, m = v
+
+    # We don't handle zero length messages at the moment.
+#    if dl == 0:
+#        return
+
+    print("int testcase_%d() {" % i)
+    print("  const uint8_t my_key[32] = ", end='')
+    print_hexbytes(29, k)
+    print("")
+    print("  const uint8_t my_message[%d] = " % dl, end='')
+    print_hexbytes(33, d)
+    print("")
+    print("  uint8_t my_expected[16] = ", end='')
+    print_hexbytes(28, m)
+    print("")
+
+    print("  uint8_t my_tag[16];")
+    print("  crypto_poly1305_ctx my_ctx;")
+    print("")
+
+    print("  crypto_poly1305_init(&my_ctx, &my_key[0]);")
+    print("  crypto_poly1305_update(&my_ctx, &my_message[0], %d);" % dl)
+    print("  crypto_poly1305_final(&my_ctx, &my_tag[0]);")
+    print("  return check_tag(&my_tag[0], &my_expected[0]);")
+    print("}")
+    print("")
+    print("")
+
+#-------------------------------------------------------------------
+# Main()
 #-------------------------------------------------------------------
 def main():
-    print("Generating tests cases.")
-    my_vectors = load_vectors("poly1305_vectors.txt")
+    my_file = "poly1305_vectors.txt"
+    print("// Generated test vectors from the file %s." % my_file)
+    my_vectors = load_vectors(my_file)
     my_set = parse_vectors(my_vectors)
-    print(my_set)
+    gen_c_code(my_set)
 
 #-------------------------------------------------------------------
 # __name__
