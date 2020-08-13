@@ -170,16 +170,16 @@ module poly1305_core(
             begin
               h_reg[i] <= 32'h0;
               c_reg[i] <= 32'h0;
+              r_reg[i] <= 32'h0;
             end
 
           for (i = 0 ; i < 4 ; i = i + 1)
             begin
-              r_reg[i]   <= 32'h0;
               pad_reg[i] <= 32'h0;
               mac_reg[i] <= 32'h0;
             end
 
-          ready_reg              <= 1'h0;
+          ready_reg              <= 1'h1;
           poly1305_core_ctrl_reg <= CTRL_IDLE;
         end
       else
@@ -201,7 +201,7 @@ module poly1305_core(
 
           if (r_we)
             begin
-              for (i = 0 ; i < 4 ; i = i + 1)
+              for (i = 0 ; i < 5 ; i = i + 1)
                 r_reg[i] <= r_new[i];
             end
 
@@ -236,7 +236,7 @@ module poly1305_core(
         c_new[i] = 32'h0;
       c_we = 1'h0;
 
-      for (i = 0 ; i < 4 ; i = i + 1)
+      for (i = 0 ; i < 5 ; i = i + 1)
         r_new[i] = 32'h0;
       r_we = 1'h0;
 

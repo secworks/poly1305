@@ -41,9 +41,6 @@ module tb_poly1305_core();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam DEBUG = 1;
-
-
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
@@ -58,6 +55,8 @@ module tb_poly1305_core();
 
   reg [31 : 0]   read_data;
   reg [127 : 0]  result_data;
+
+  reg            tb_debug;
 
   reg            tb_clk;
   reg            tb_reset_n;
@@ -108,7 +107,7 @@ module tb_poly1305_core();
   //----------------------------------------------------------------
   always @ (posedge tb_clk)
     begin : sys_monitor
-      if (DEBUG)
+      if (tb_debug)
         begin
           dump_dut_state();
           cycle_ctr = cycle_ctr + 1;
@@ -124,6 +123,7 @@ module tb_poly1305_core();
   task dump_dut_state;
     begin
       $display("cycle:  0x%016x", cycle_ctr);
+      $display("Input and output:");
       $display("init:  0x%01x, next: 0x%01x, finish: 0x%01x",
                tb_init, tb_next, tb_finish);
       $display("ready: 0x%01x", tb_ready);
@@ -131,6 +131,12 @@ module tb_poly1305_core();
       $display("block: 0x%016x", tb_block);
       $display("mac:   0x%016x", tb_mac);
       $display("");
+      $display("Internal state:");
+      $display("r:     0x%08x_%08x_%08x_%08x_%08x",
+               dut.r_reg[4], dut.r_reg[3], dut.r_reg[2], dut.r_reg[1], dut.r_reg[0]);
+      $display("pad:   0x%08x_%08x_%08x_%08x",
+               dut.pad_reg[3], dut.pad_reg[2], dut.pad_reg[1], dut.pad_reg[0]);
+      $display("\n\n");
     end
   endtask // dump_dut_state
 
@@ -146,6 +152,8 @@ module tb_poly1305_core();
       tb_reset_n = 0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
+      #(2 * CLK_PERIOD);
+      $display("TB: Reset done.");
     end
   endtask // reset_dut
 
@@ -183,6 +191,7 @@ module tb_poly1305_core();
       error_ctr   = 0;
       tc_ctr      = 0;
       tb_clk      = 0;
+      tb_debug    = 0;
       tb_reset_n  = 1;
       tb_init     = 0;
       tb_next     = 0;
@@ -238,6 +247,36 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
+  // test_rfc8349;
+  //
+  // Test case that uses the test vectors from RFC 8349,
+  // section 2.5.2:
+  // https://tools.ietf.org/html/rfc8439#section-2.5.2
+  //----------------------------------------------------------------
+  task test_rfc8349;
+    begin : test_rfc8349
+      $display("*** test_rfc8349 started.\n");
+      inc_tc_ctr();
+
+      tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
+      tb_block = 128'h0;
+
+      tb_debug = 1;
+      #(2 * CLK_PERIOD);
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+
+      #(4 * CLK_PERIOD);
+      tb_debug = 0;
+
+      $display("*** test_rfc8349 completed.\n");
+    end
+  endtask // test_rfc8349
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -249,7 +288,9 @@ module tb_poly1305_core();
 
       init_sim();
       reset_dut();
-      #(10 * CLK_PERIOD);
+
+      test_rfc8349();
+
       display_test_results();
 
       $display("*** Testbench for poly1305_core done ***");

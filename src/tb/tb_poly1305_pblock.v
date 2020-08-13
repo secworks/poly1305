@@ -328,7 +328,7 @@ module tb_poly1305_pblock();
       #(30 * CLK_PERIOD);
       tb_debug = 0;
 
-      $display("*** test_rfc8349 started.\n");
+      $display("*** test_rfc8349 completed.\n");
     end
   endtask // test_rfc8349
 
