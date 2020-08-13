@@ -247,15 +247,15 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
-  // test_rfc8349;
+  // test_rfc8439;
   //
-  // Test case that uses the test vectors from RFC 8349,
+  // Test case that uses the test vectors from RFC 8439,
   // section 2.5.2:
   // https://tools.ietf.org/html/rfc8439#section-2.5.2
   //----------------------------------------------------------------
-  task test_rfc8349;
-    begin : test_rfc8349
-      $display("*** test_rfc8349 started.\n");
+  task test_rfc8439;
+    begin : test_rfc8439
+      $display("*** test_rfc8439 started.\n");
       inc_tc_ctr();
 
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
@@ -271,9 +271,9 @@ module tb_poly1305_core();
       #(4 * CLK_PERIOD);
       tb_debug = 0;
 
-      $display("*** test_rfc8349 completed.\n");
+      $display("*** test_rfc8439 completed.\n");
     end
-  endtask // test_rfc8349
+  endtask // test_rfc8439
 
 
   //----------------------------------------------------------------
@@ -289,7 +289,7 @@ module tb_poly1305_core();
       init_sim();
       reset_dut();
 
-      test_rfc8349();
+      test_rfc8439();
 
       display_test_results();
 
