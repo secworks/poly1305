@@ -35,98 +35,70 @@
 //======================================================================
 
 module poly1305_core(
-                     input wire           clk,
-                     input wire           reset_n,
+                     input wire            clk,
+                     input wire            reset_n,
 
-                     input wire           init,
-                     input wire           next,
-                     input wire           finish,
+                     input wire            init,
+                     input wire            next,
+                     input wire            finish,
 
-                     output wire          ready,
+                     output wire           ready,
 
-                     input wire [255 : 0] key,
-                     input wire [127 : 0] block,
-                     input wire [4 : 0]   blocklen,
+                     input wire [255 : 0]  key,
+
+                     input wire [127 : 0]  block,
+                     input wire [4 : 0]    blocklen,
 
                      output wire [127 : 0] mac
                     );
 
+
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam CTRL_IDLE  = 2'h0;
-  localparam CTRL_INIT  = 2'h1;
-  localparam CTRL_NEXT  = 2'h2;
+  localparam CTRL_IDLE  = 3'h0;
+  localparam CTRL_INIT  = 3'h1;
+  localparam CTRL_NEXT  = 3'h2;
+  localparam CTRL_FINAL = 3'h3;
+  localparam CTRL_DONE  = 3'h7;
 
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg  [31 : 0] h0_reg;
-  wire [31 : 0] h0_new;
-  reg  [31 : 0] h1_reg;
-  wire [31 : 0] h1_new;
-  reg  [31 : 0] h2_reg;
-  wire [31 : 0] h2_new;
-  reg  [31 : 0] h3_reg;
-  wire [31 : 0] h3_new;
-  reg  [31 : 0] h4_reg;
-  wire [31 : 0] h4_new;
+  reg  [31 : 0] h_reg [0 : 4];
+  wire [31 : 0] h_new [0 : 4];
   reg           h_we;
 
-  reg [31 : 0]  c0_reg;
-  reg [31 : 0]  c0_new;
-  reg [31 : 0]  c1_reg;
-  reg [31 : 0]  c1_new;
-  reg [31 : 0]  c2_reg;
-  reg [31 : 0]  c2_new;
-  reg [31 : 0]  c3_reg;
-  reg [31 : 0]  c3_new;
-  reg [31 : 0]  c4_reg;
-  reg [31 : 0]  c4_new;
+  reg [31 : 0]  c_reg [0 : 4];
+  reg [31 : 0]  c_new [0 : 4];
   reg           c_we;
 
-  reg [31 : 0]  r0_reg;
-  reg [31 : 0]  r0_new;
-  reg [31 : 0]  r1_reg;
-  reg [31 : 0]  r1_new;
-  reg [31 : 0]  r2_reg;
-  reg [31 : 0]  r2_new;
-  reg [31 : 0]  r3_reg;
-  reg [31 : 0]  r3_new;
-  reg [31 : 0]  r4_reg;
-  reg [31 : 0]  r4_new;
+  reg [31 : 0]  r_reg [0 : 4];
+  reg [31 : 0]  r_new [0 : 4];
   reg           r_we;
 
-  reg [31 : 0]  pad0_reg;
-  reg [31 : 0]  pad0_new;
-  reg [31 : 0]  pad1_reg;
-  reg [31 : 0]  pad1_new;
-  reg [31 : 0]  pad2_reg;
-  reg [31 : 0]  pad2_new;
-  reg [31 : 0]  pad3_reg;
-  reg [31 : 0]  pad3_new;
+  reg [31 : 0]  pad_reg [0 : 3];
+  reg [31 : 0]  pad_new [0 : 3];
   reg           pad_we;
 
-  reg [31 : 0]  mac0_reg;
-  reg [31 : 0]  mac0_new;
-  reg [31 : 0]  mac1_reg;
-  reg [31 : 0]  mac1_new;
-  reg [31 : 0]  mac2_reg;
-  reg [31 : 0]  mac2_new;
-  reg [31 : 0]  mac3_reg;
-  reg [31 : 0]  mac3_new;
+  reg [31 : 0]  mac_reg [0 : 3];
+  reg [31 : 0]  mac_new [0 : 3];
   reg           mac_we;
 
-  reg [1 : 0] poly1305_core_ctrl_reg;
-  reg [1 : 0] poly1305_core_ctrl_new;
-  reg         poly1305_core_ctrl_we;
+  reg           ready_reg;
+  reg           ready_new;
+  reg           ready_we;
+
+  reg [2 : 0]   poly1305_core_ctrl_reg;
+  reg [2 : 0]   poly1305_core_ctrl_new;
+  reg           poly1305_core_ctrl_we;
 
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg pblock_next;
+  reg  pblock_next;
   wire pblock_ready;
 
   reg state_init;
@@ -139,10 +111,12 @@ module poly1305_core(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign mac[031 : 000] = mac0_reg;
-  assign mac[063 : 032] = mac1_reg;
-  assign mac[095 : 064] = mac2_reg;
-  assign mac[127 : 096] = mac3_reg;
+  assign mac[031 : 000] = mac_reg[0];
+  assign mac[063 : 032] = mac_reg[1];
+  assign mac[095 : 064] = mac_reg[2];
+  assign mac[127 : 096] = mac_reg[3];
+
+  assign ready = ready_reg;
 
 
   //----------------------------------------------------------------
@@ -151,27 +125,32 @@ module poly1305_core(
   poly1305_pblock pblock(
                          .clk(clk),
                          .reset_n(reset_n),
+
                          .next(pblock_next),
                          .ready(pblock_ready),
-                         .h0(h0_reg),
-                         .h1(h1_reg),
-                         .h2(h2_reg),
-                         .h3(h3_reg),
-                         .h4(h4_reg),
-                         .c0(c0_reg),
-                         .c1(c1_reg),
-                         .c2(c2_reg),
-                         .c3(c3_reg),
-                         .c4(c4_reg),
-                         .r0(r0_reg),
-                         .r1(r1_reg),
-                         .r2(r2_reg),
-                         .r3(r3_reg),
-                         .h0_new(h0_new),
-                         .h1_new(h1_new),
-                         .h2_new(h2_new),
-                         .h3_new(h3_new),
-                         .h4_new(h4_new)
+
+                         .h0(h_reg[0]),
+                         .h1(h_reg[1]),
+                         .h2(h_reg[2]),
+                         .h3(h_reg[3]),
+                         .h4(h_reg[4]),
+
+                         .c0(c_reg[0]),
+                         .c1(c_reg[1]),
+                         .c2(c_reg[2]),
+                         .c3(c_reg[3]),
+                         .c4(c_reg[4]),
+
+                         .r0(r_reg[0]),
+                         .r1(r_reg[1]),
+                         .r2(r_reg[2]),
+                         .r3(r_reg[3]),
+
+                         .h0_new(h_new[0]),
+                         .h1_new(h_new[1]),
+                         .h2_new(h_new[2]),
+                         .h3_new(h_new[3]),
+                         .h4_new(h_new[4])
                         );
 
 
@@ -184,79 +163,58 @@ module poly1305_core(
   //----------------------------------------------------------------
   always @ (posedge clk)
     begin : reg_update
+      integer i;
       if (!reset_n)
         begin
-          h0_reg <= 32'h0;
-          h1_reg <= 32'h0;
-          h2_reg <= 32'h0;
-          h3_reg <= 32'h0;
-          h4_reg <= 32'h0;
+          for (i = 0 ; i < 5 ; i = i + 1)
+            begin
+              h_reg[i] <= 32'h0;
+              c_reg[i] <= 32'h0;
+            end
 
-          c0_reg <= 32'h0;
-          c1_reg <= 32'h0;
-          c2_reg <= 32'h0;
-          c3_reg <= 32'h0;
-          c4_reg <= 32'h0;
+          for (i = 0 ; i < 4 ; i = i + 1)
+            begin
+              r_reg[i]   <= 32'h0;
+              pad_reg[i] <= 32'h0;
+              mac_reg[i] <= 32'h0;
+            end
 
-          r0_reg <= 32'h0;
-          r1_reg <= 32'h0;
-          r2_reg <= 32'h0;
-          r3_reg <= 32'h0;
-
-          pad0_reg <= 32'h0;
-          pad1_reg <= 32'h0;
-          pad2_reg <= 32'h0;
-          pad3_reg <= 32'h0;
-
-          mac0_reg <= 32'h0;
-          mac1_reg <= 32'h0;
-          mac2_reg <= 32'h0;
-          mac3_reg <= 32'h0;
-
+          ready_reg              <= 1'h0;
           poly1305_core_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
+          if (ready_we)
+            ready_reg <= ready_new;
+
           if (h_we)
             begin
-              h0_reg <= h0_new;
-              h1_reg <= h1_new;
-              h2_reg <= h2_new;
-              h3_reg <= h3_new;
-              h4_reg <= h4_new;
+              for (i = 0 ; i < 5 ; i = i + 1)
+                h_reg[i] <= h_new[i];
             end
 
           if (c_we)
             begin
-              c0_reg <= c0_new;
-              c1_reg <= c1_new;
-              c2_reg <= c2_new;
-              c3_reg <= c3_new;
-              c4_reg <= c4_new;
+              for (i = 0 ; i < 5 ; i = i + 1)
+                c_reg[i] <= c_new[i];
             end
 
           if (r_we)
             begin
-              r0_reg <= r0_new;
-              r1_reg <= r1_new;
-              r2_reg <= r2_new;
-              r3_reg <= r3_new;
+              for (i = 0 ; i < 4 ; i = i + 1)
+                r_reg[i] <= r_new[i];
             end
 
           if (pad_we)
             begin
-              pad0_reg <= pad0_new;
-              pad1_reg <= pad1_new;
-              pad2_reg <= pad2_new;
-              pad3_reg <= pad3_new;
+              for (i = 0 ; i < 4 ; i = i + 1)
+                pad_reg[i] <= pad_new[i];
             end
 
           if (mac_we)
             begin
-              mac0_reg <= mac0_new;
-              mac1_reg <= mac1_new;
-              mac2_reg <= mac2_new;
-              mac3_reg <= mac3_new;
+              for (i = 0 ; i < 4 ; i = i + 1)
+                mac_reg[i] <= mac_new[i];
             end
 
           if (poly1305_core_ctrl_we)
@@ -270,62 +228,57 @@ module poly1305_core(
   //----------------------------------------------------------------
   always @*
     begin : poly1305_core_logic
-      c0_new = 32'h0;
-      c1_new = 32'h0;
-      c2_new = 32'h0;
-      c3_new = 32'h0;
-      c4_new = 32'h0;
-      c_we   = 1'h0;
+      integer i;
 
-      h_we   = 1'h0;
+      h_we = 1'h0;
 
-      r0_new = 32'h0;
-      r1_new = 32'h0;
-      r2_new = 32'h0;
-      r3_new = 32'h0;
-      r4_new = 32'h0;
-      r_we   = 1'h0;
+      for (i = 0 ; i < 5 ; i = i + 1)
+        c_new[i] = 32'h0;
+      c_we = 1'h0;
 
-      pad0_new = 32'h0;
-      pad1_new = 32'h0;
-      pad2_new = 32'h0;
-      pad3_new = 32'h0;
-      pad_we   = 1'h0;
+      for (i = 0 ; i < 4 ; i = i + 1)
+        r_new[i] = 32'h0;
+      r_we = 1'h0;
 
-      mac0_new = 32'h0;
-      mac1_new = 32'h0;
-      mac2_new = 32'h0;
-      mac3_new = 32'h0;
-      mac_we   = 1'h0;
+      for (i = 0 ; i < 4 ; i = i + 1)
+        pad_new[i] = 32'h0;
+      pad_we = 1'h0;
+
+      for (i = 0 ; i < 4 ; i = i + 1)
+        mac_new[i] = 32'h0;
+      mac_we = 1'h0;
+
 
       if (state_init)
         begin
-          c4_new = 32'h1;
-          c_we   = 1'h1;
+          c_new[4] = 32'h1;
+          c_we     = 1'h1;
 
-          r0_new = key[031 : 000];
-          r1_new = key[063 : 032] & 32'hfffffffc;
-          r2_new = key[095 : 064] & 32'hfffffffc;
-          r3_new = key[127 : 096] & 32'hfffffffc;
-          r4_new = key[191 : 128] & 32'hfffffffc;
-          r_we   = 1'h0;
+          r_new[0] = key[031 : 000];
+          r_new[1] = key[063 : 032] & 32'hfffffffc;
+          r_new[2] = key[095 : 064] & 32'hfffffffc;
+          r_new[3] = key[127 : 096] & 32'hfffffffc;
+          r_new[4] = key[191 : 128] & 32'hfffffffc;
+          r_we     = 1'h1;
 
-          pad0_new = key[159 : 128];
-          pad1_new = key[191 : 160];
-          pad2_new = key[223 : 192];
-          pad3_new = key[255 : 224];
-          pad_we   = 1'h1;
+          pad_new[0] = key[159 : 128];
+          pad_new[1] = key[191 : 160];
+          pad_new[2] = key[223 : 192];
+          pad_new[3] = key[255 : 224];
+          pad_we     = 1'h1;
         end
+
 
       if (load_block)
         begin
-          c0_new = block[031 : 000];
-          c1_new = block[063 : 032];
-          c2_new = block[095 : 064];
-          c3_new = block[127 : 096];
-          c4_new = block[127 : 096];
-          c_we = 1'h1;
+          c_new[0] = block[031 : 000];
+          c_new[1] = block[063 : 032];
+          c_new[2] = block[095 : 064];
+          c_new[3] = block[127 : 096];
+          c_new[4] = block[127 : 096];
+          c_we     = 1'h1;
         end
+
 
       if (state_update)
         begin
@@ -333,21 +286,22 @@ module poly1305_core(
           h_we = 1'h1;
         end
 
+
       if (state_final)
         begin
           c_we = 1'h1;
           r_we = 1'h1;
         end
 
+
       if (mac_update)
         begin
-          mac0_new = 32'h0;
-          mac1_new = 32'h0;
-          mac2_new = 32'h0;
-          mac3_new = 32'h0;
-          mac_we = 1'h1;
+          mac_new[0] = 32'h0;
+          mac_new[1] = 32'h0;
+          mac_new[2] = 32'h0;
+          mac_new[3] = 32'h0;
+          mac_we     = 1'h1;
         end
-
     end // poly1305_core_logic
 
 
@@ -361,7 +315,10 @@ module poly1305_core(
       state_update           = 1'h0;
       state_final            = 1'h0;
       mac_update             = 1'h0;
-      poly1305_core_ctrl_reg = CTRL_IDLE;
+      ready_new              = 1'h0;
+      ready_we               = 1'h0;
+      poly1305_core_ctrl_new = CTRL_IDLE;
+      poly1305_core_ctrl_we  = 1'h0;
 
 
       case (poly1305_core_ctrl_reg)
@@ -369,18 +326,53 @@ module poly1305_core(
           begin
             if (init)
               begin
-                state_init = 1'h1;
+                state_init             = 1'h1;
+                ready_new              = 1'h0;
+                ready_we               = 1'h1;
+                poly1305_core_ctrl_new = CTRL_DONE;
+                poly1305_core_ctrl_we  = 1'h1;
               end
 
             if (next)
               begin
                 state_update = 1'h1;
+                ready_new              = 1'h0;
+                ready_we               = 1'h1;
+                poly1305_core_ctrl_new = CTRL_NEXT;
+                poly1305_core_ctrl_we  = 1'h1;
               end
 
             if (finish)
               begin
                 state_final = 1'h1;
+                ready_new              = 1'h0;
+                ready_we               = 1'h1;
+                poly1305_core_ctrl_new = CTRL_FINAL;
+                poly1305_core_ctrl_we  = 1'h1;
               end
+          end
+
+
+        CTRL_NEXT:
+          begin
+            poly1305_core_ctrl_new = CTRL_DONE;
+            poly1305_core_ctrl_we  = 1'h1;
+          end
+
+
+        CTRL_FINAL:
+          begin
+            poly1305_core_ctrl_new = CTRL_DONE;
+            poly1305_core_ctrl_we  = 1'h1;
+          end
+
+
+        CTRL_DONE:
+          begin
+            ready_new              = 1'h1;
+            ready_we               = 1'h1;
+            poly1305_core_ctrl_new = CTRL_IDLE;
+            poly1305_core_ctrl_we  = 1'h1;
           end
 
         default:
