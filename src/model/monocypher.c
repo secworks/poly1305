@@ -279,6 +279,26 @@ void crypto_chacha20_stream(crypto_chacha_ctx *ctx,
 }
 
 
+
+//------------------------------------------------------------------
+// dump_context()
+//
+// Print the poly1305 context.
+//------------------------------------------------------------------
+void dump_context(crypto_poly1305_ctx *ctx) {
+  printf("r:     0x%08x_%08x_%08x_%08x\n",
+         ctx->r[0], ctx->r[1], ctx->r[2], ctx->r[3]);
+  printf("h:     0x%08x_%08x_%08x_%08x_%08x\n",
+         ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]);
+  printf("c:     0x%08x_%08x_%08x_%08x_%08x\n",
+         ctx->c[0], ctx->c[1], ctx->c[2], ctx->c[3], ctx->c[4]);
+  printf("pad:   0x%08x_%08x_%08x_%08x\n",
+         ctx->pad[0], ctx->pad[1], ctx->pad[2], ctx->pad[3]);
+  printf("c_idx: 0x%08zx\n", ctx->c_idx);
+  printf("\n");
+}
+
+
 /////////////////
 /// Poly 1305 ///
 /////////////////
@@ -373,10 +393,17 @@ static void poly_clear_c(crypto_poly1305_ctx *ctx)
 
 static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 {
-    size_t word = ctx->c_idx >> 2;
-    size_t byte = ctx->c_idx & 3;
-    ctx->c[word] |= (u32)input << (byte * 8);
-    ctx->c_idx++;
+  printf("poly_take_input() called with input: 0x%02x: \n", input);
+  printf("Context before poly_take_input():\n");
+  dump_context(ctx);
+
+  size_t word = ctx->c_idx >> 2;
+  size_t byte = ctx->c_idx & 3;
+  ctx->c[word] |= (u32)input << (byte * 8);
+  ctx->c_idx++;
+
+  printf("Context after poly_take_input():\n");
+  dump_context(ctx);
 }
 
 static void poly_update(crypto_poly1305_ctx *ctx,

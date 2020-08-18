@@ -82,7 +82,6 @@ int check_tag(uint8_t *tag, uint8_t *expected) {
 // Print the poly1305 context.
 //------------------------------------------------------------------
 void print_context(crypto_poly1305_ctx *ctx) {
-  printf("State of the context:\n");
   printf("r:     0x%08x_%08x_%08x_%08x\n",
          ctx->r[0], ctx->r[1], ctx->r[2], ctx->r[3]);
   printf("h:     0x%08x_%08x_%08x_%08x_%08x\n",
@@ -124,12 +123,20 @@ int p1305_rfc8439() {
 
   printf("\nTest p1305_rfc8439: Check that the RFC test vectors work.\n");
 
-  printf("Executing poly1305_init\n");
+  printf("Calling poly1305_init()\n");
   crypto_poly1305_init(&my_ctx, &my_key[0]);
+  printf("Context after poly1305_init()\n");
   print_context(&my_ctx);
 
-//  crypto_poly1305_update(&my_ctx, &my_message[0], 34);
-//  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  printf("Calling poly1305_update() with data\n");
+  crypto_poly1305_update(&my_ctx, &my_message[0], 34);
+  printf("Context after poly1305_update()\n");
+  print_context(&my_ctx);
+
+  printf("Calling poly1305_final() with data\n");
+  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  printf("Context after poly1305_final()\n");
+  print_context(&my_ctx);
 
   return check_tag(&my_tag[0], &my_expected[0]);
 }
