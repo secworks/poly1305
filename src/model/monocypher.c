@@ -47,7 +47,7 @@ void crypto_wipe(void *secret, size_t size)
 //
 // Print the poly1305 context.
 //------------------------------------------------------------------
-void dump_context(crypto_poly1305_ctx *ctx) {
+void print_context(crypto_poly1305_ctx *ctx) {
   printf("r:     0x%08x_%08x_%08x_%08x\n",
          ctx->r[0], ctx->r[1], ctx->r[2], ctx->r[3]);
   printf("h:     0x%08x_%08x_%08x_%08x_%08x\n",
@@ -76,13 +76,7 @@ static void poly_block(crypto_poly1305_ctx *ctx)
 {
   printf("Inside poly_block.\n");
   printf("Context before processing:\n");
-  printf("h0  = 0x%08x, h1  = 0x%08x, h2  = 0x%08x, h3  = 0x%08x, h4  = 0x%08x\n",
-         ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]);
-  printf("c0  = 0x%08x, c1  = 0x%08x, c2  = 0x%08x, c3  = 0x%08x, c4  = 0x%08x\n",
-         ctx->c[0], ctx->c[1], ctx->c[2], ctx->c[3], ctx->c[4]);
-  printf("r0  = 0x%08x, r1  = 0x%08x, r2  = 0x%08x, r3  = 0x%08x\n",
-         ctx->r[0], ctx->r[1], ctx->r[2], ctx->r[3]);
-  printf("\n");
+  print_context(ctx);
 
   printf("Intermediate results during processing:\n");
   // s = h + c, without carry propagation
@@ -137,8 +131,7 @@ static void poly_block(crypto_poly1305_ctx *ctx)
     ctx->h[4] = (u32)u4;         // u4 <=          4
 
     printf("Context after processing:\n");
-    printf("h0  = 0x%016x, h1  = 0x%016x, h2  = 0x%016x, h3  = 0x%016x, h4  = 0x%016x\n",
-           ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]);
+    print_context(ctx);
     printf("\n");
 }
 
@@ -153,11 +146,12 @@ static void poly_clear_c(crypto_poly1305_ctx *ctx)
     ctx->c_idx = 0;
 }
 
+
 static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 {
   printf("poly_take_input() called with input: 0x%02x: \n", input);
   printf("Context before poly_take_input():\n");
-  dump_context(ctx);
+  print_context(ctx);
 
   size_t word = ctx->c_idx >> 2;
   size_t byte = ctx->c_idx & 3;
@@ -165,8 +159,9 @@ static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
   ctx->c_idx++;
 
   printf("Context after poly_take_input():\n");
-  dump_context(ctx);
+  print_context(ctx);
 }
+
 
 static void poly_update(crypto_poly1305_ctx *ctx,
                         const u8 *message, size_t message_size)

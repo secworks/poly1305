@@ -76,24 +76,6 @@ int check_tag(uint8_t *tag, uint8_t *expected) {
   return error;
 }
 
-//------------------------------------------------------------------
-// print_context()
-//
-// Print the poly1305 context.
-//------------------------------------------------------------------
-void print_context(crypto_poly1305_ctx *ctx) {
-  printf("r:     0x%08x_%08x_%08x_%08x\n",
-         ctx->r[0], ctx->r[1], ctx->r[2], ctx->r[3]);
-  printf("h:     0x%08x_%08x_%08x_%08x_%08x\n",
-         ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]);
-  printf("c:     0x%08x_%08x_%08x_%08x_%08x\n",
-         ctx->c[0], ctx->c[1], ctx->c[2], ctx->c[3], ctx->c[4]);
-  printf("pad:   0x%08x_%08x_%08x_%08x\n",
-         ctx->pad[0], ctx->pad[1], ctx->pad[2], ctx->pad[3]);
-  printf("c_idx: 0x%08zx\n", ctx->c_idx);
-  printf("\n");
-}
-
 
 //------------------------------------------------------------------
 // p1305_rfc8439()
