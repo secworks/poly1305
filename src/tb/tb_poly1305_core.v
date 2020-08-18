@@ -127,15 +127,21 @@ module tb_poly1305_core();
       $display("init:  0x%01x, next: 0x%01x, finish: 0x%01x",
                tb_init, tb_next, tb_finish);
       $display("ready: 0x%01x", tb_ready);
-      $display("key:   0x%032x", tb_key);
-      $display("block: 0x%016x", tb_block);
-      $display("mac:   0x%016x", tb_mac);
+      $display("key:   0x%064x", tb_key);
+      $display("block: 0x%032x", tb_block);
+      $display("mac:   0x%032x", tb_mac);
       $display("");
       $display("Internal state:");
-      $display("r:     0x%08x_%08x_%08x_%08x_%08x",
-               dut.r_reg[4], dut.r_reg[3], dut.r_reg[2], dut.r_reg[1], dut.r_reg[0]);
+      $display("r:     0x%08x_%08x_%08x_%08x",
+               dut.r_reg[0], dut.r_reg[1], dut.r_reg[2], dut.r_reg[3]);
+      $display("h:     0x%08x_%08x_%08x_%08x_%08x",
+               dut.h_reg[0], dut.h_reg[1], dut.h_reg[2],
+               dut.h_reg[3], dut.h_reg[4]);
+      $display("c:     0x%08x_%08x_%08x_%08x_%08x",
+               dut.c_reg[0], dut.c_reg[1], dut.c_reg[2],
+               dut.c_reg[3], dut.c_reg[4]);
       $display("pad:   0x%08x_%08x_%08x_%08x",
-               dut.pad_reg[3], dut.pad_reg[2], dut.pad_reg[1], dut.pad_reg[0]);
+               dut.pad_reg[0], dut.pad_reg[1], dut.pad_reg[2], dut.pad_reg[3]);
       $display("\n\n");
     end
   endtask // dump_dut_state

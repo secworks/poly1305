@@ -76,6 +76,25 @@ int check_tag(uint8_t *tag, uint8_t *expected) {
   return error;
 }
 
+//------------------------------------------------------------------
+// print_context()
+//
+// Print the poly1305 context.
+//------------------------------------------------------------------
+void print_context(crypto_poly1305_ctx *ctx) {
+  printf("State of the context:\n");
+  printf("r:     0x%08x_%08x_%08x_%08x\n",
+         ctx->r[0], ctx->r[1], ctx->r[2], ctx->r[3]);
+  printf("h:     0x%08x_%08x_%08x_%08x_%08x\n",
+         ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]);
+  printf("c:     0x%08x_%08x_%08x_%08x_%08x\n",
+         ctx->c[0], ctx->c[1], ctx->c[2], ctx->c[3], ctx->c[4]);
+  printf("pad:   0x%08x_%08x_%08x_%08x\n",
+         ctx->pad[0], ctx->pad[1], ctx->pad[2], ctx->pad[3]);
+  printf("c_idx: 0x%08zx\n", ctx->c_idx);
+  printf("\n");
+}
+
 
 //------------------------------------------------------------------
 // p1305_rfc8439()
@@ -103,11 +122,14 @@ int p1305_rfc8439() {
   uint8_t my_tag[16];
   crypto_poly1305_ctx my_ctx;
 
-  printf("p1305_rfc8439. Check that the RFC test vectors work.\n");
+  printf("\nTest p1305_rfc8439: Check that the RFC test vectors work.\n");
 
+  printf("Executing poly1305_init\n");
   crypto_poly1305_init(&my_ctx, &my_key[0]);
-  crypto_poly1305_update(&my_ctx, &my_message[0], 34);
-  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  print_context(&my_ctx);
+
+//  crypto_poly1305_update(&my_ctx, &my_message[0], 34);
+//  crypto_poly1305_final(&my_ctx, &my_tag[0]);
 
   return check_tag(&my_tag[0], &my_expected[0]);
 }
@@ -681,25 +703,24 @@ void run_tests() {
   int test_result = 0;
 
   test_result += p1305_rfc8439();
-  test_result += p1305_test1();
-  test_result += p1305_test2();
-
-  test_result += testcase_0();
-  test_result += testcase_1();
-  test_result += testcase_2();
-  test_result += testcase_3();
-  test_result += testcase_4();
-  test_result += testcase_5();
-  test_result += testcase_6();
-  test_result += testcase_7();
-  test_result += testcase_8();
-  test_result += testcase_9();
-  test_result += testcase_10();
-  test_result += testcase_11();
-  test_result += testcase_12();
-  test_result += testcase_13();
-  test_result += testcase_14();
-  test_result += testcase_15();
+//  test_result += p1305_test1();
+//  test_result += p1305_test2();
+//  test_result += testcase_0();
+//  test_result += testcase_1();
+//  test_result += testcase_2();
+//  test_result += testcase_3();
+//  test_result += testcase_4();
+//  test_result += testcase_5();
+//  test_result += testcase_6();
+//  test_result += testcase_7();
+//  test_result += testcase_8();
+//  test_result += testcase_9();
+//  test_result += testcase_10();
+//  test_result += testcase_11();
+//  test_result += testcase_12();
+//  test_result += testcase_13();
+//  test_result += testcase_14();
+//  test_result += testcase_15();
 
   printf("Number of failing test cases: %d\n", test_result);
 }

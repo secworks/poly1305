@@ -64,6 +64,14 @@ module poly1305_core(
 
 
   //----------------------------------------------------------------
+  // Internal functions.
+  //----------------------------------------------------------------
+  function [31 : 0] le(input [31 : 0] w);
+    le = {w[7 : 0], w[15 : 8], w[23 : 16], w[31 : 24]};
+  endfunction // le
+
+
+  //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg  [31 : 0] h_reg [0 : 4];
@@ -74,8 +82,8 @@ module poly1305_core(
   reg [31 : 0]  c_new [0 : 4];
   reg           c_we;
 
-  reg [31 : 0]  r_reg [0 : 4];
-  reg [31 : 0]  r_new [0 : 4];
+  reg [31 : 0]  r_reg [0 : 3];
+  reg [31 : 0]  r_new [0 : 3];
   reg           r_we;
 
   reg [31 : 0]  pad_reg [0 : 3];
@@ -170,11 +178,11 @@ module poly1305_core(
             begin
               h_reg[i] <= 32'h0;
               c_reg[i] <= 32'h0;
-              r_reg[i] <= 32'h0;
             end
 
           for (i = 0 ; i < 4 ; i = i + 1)
             begin
+              r_reg[i]   <= 32'h0;
               pad_reg[i] <= 32'h0;
               mac_reg[i] <= 32'h0;
             end
@@ -201,7 +209,7 @@ module poly1305_core(
 
           if (r_we)
             begin
-              for (i = 0 ; i < 5 ; i = i + 1)
+              for (i = 0 ; i < 4 ; i = i + 1)
                 r_reg[i] <= r_new[i];
             end
 
@@ -236,7 +244,7 @@ module poly1305_core(
         c_new[i] = 32'h0;
       c_we = 1'h0;
 
-      for (i = 0 ; i < 5 ; i = i + 1)
+      for (i = 0 ; i < 4 ; i = i + 1)
         r_new[i] = 32'h0;
       r_we = 1'h0;
 
@@ -254,17 +262,16 @@ module poly1305_core(
           c_new[4] = 32'h1;
           c_we     = 1'h1;
 
-          r_new[0] = key[031 : 000];
-          r_new[1] = key[063 : 032] & 32'hfffffffc;
-          r_new[2] = key[095 : 064] & 32'hfffffffc;
-          r_new[3] = key[127 : 096] & 32'hfffffffc;
-          r_new[4] = key[191 : 128] & 32'hfffffffc;
+          r_new[0] = le(key[255 : 224]) & 32'h0fffffff;
+          r_new[1] = le(key[223 : 192]) & 32'h0ffffffc;
+          r_new[2] = le(key[191 : 160]) & 32'h0ffffffc;
+          r_new[3] = le(key[159 : 128]) & 32'h0ffffffc;
           r_we     = 1'h1;
 
-          pad_new[0] = key[159 : 128];
-          pad_new[1] = key[191 : 160];
-          pad_new[2] = key[223 : 192];
-          pad_new[3] = key[255 : 224];
+          pad_new[0] = le(key[127 : 096]);
+          pad_new[1] = le(key[095 : 064]);
+          pad_new[2] = le(key[063 : 032]);
+          pad_new[3] = le(key[031 : 000]);
           pad_we     = 1'h1;
         end
 
