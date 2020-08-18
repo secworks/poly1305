@@ -262,6 +262,8 @@ module poly1305_core(
           c_new[4] = 32'h1;
           c_we     = 1'h1;
 
+          h_we     = 1'h1;
+
           r_new[0] = le(key[255 : 224]) & 32'h0fffffff;
           r_new[1] = le(key[223 : 192]) & 32'h0ffffffc;
           r_new[2] = le(key[191 : 160]) & 32'h0ffffffc;
