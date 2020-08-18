@@ -86,9 +86,9 @@ module poly1305_core(
   reg [31 : 0]  r_new [0 : 3];
   reg           r_we;
 
-  reg [31 : 0]  pad_reg [0 : 3];
-  reg [31 : 0]  pad_new [0 : 3];
-  reg           pad_we;
+  reg [31 : 0]  s_reg [0 : 3];
+  reg [31 : 0]  s_new [0 : 3];
+  reg           s_we;
 
   reg [31 : 0]  mac_reg [0 : 3];
   reg [31 : 0]  mac_new [0 : 3];
@@ -183,7 +183,7 @@ module poly1305_core(
           for (i = 0 ; i < 4 ; i = i + 1)
             begin
               r_reg[i]   <= 32'h0;
-              pad_reg[i] <= 32'h0;
+              s_reg[i]   <= 32'h0;
               mac_reg[i] <= 32'h0;
             end
 
@@ -213,10 +213,10 @@ module poly1305_core(
                 r_reg[i] <= r_new[i];
             end
 
-          if (pad_we)
+          if (s_we)
             begin
               for (i = 0 ; i < 4 ; i = i + 1)
-                pad_reg[i] <= pad_new[i];
+                s_reg[i] <= s_new[i];
             end
 
           if (mac_we)
@@ -249,8 +249,8 @@ module poly1305_core(
       r_we = 1'h0;
 
       for (i = 0 ; i < 4 ; i = i + 1)
-        pad_new[i] = 32'h0;
-      pad_we = 1'h0;
+        s_new[i] = 32'h0;
+      s_we = 1'h0;
 
       for (i = 0 ; i < 4 ; i = i + 1)
         mac_new[i] = 32'h0;
@@ -270,11 +270,11 @@ module poly1305_core(
           r_new[3] = le(key[159 : 128]) & 32'h0ffffffc;
           r_we     = 1'h1;
 
-          pad_new[0] = le(key[127 : 096]);
-          pad_new[1] = le(key[095 : 064]);
-          pad_new[2] = le(key[063 : 032]);
-          pad_new[3] = le(key[031 : 000]);
-          pad_we     = 1'h1;
+          s_new[0] = le(key[127 : 096]);
+          s_new[1] = le(key[095 : 064]);
+          s_new[2] = le(key[063 : 032]);
+          s_new[3] = le(key[031 : 000]);
+          s_we     = 1'h1;
         end
 
 

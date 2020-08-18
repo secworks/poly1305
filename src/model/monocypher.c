@@ -54,8 +54,8 @@ void print_context(crypto_poly1305_ctx *ctx) {
          ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3], ctx->h[4]);
   printf("c:     0x%08x_%08x_%08x_%08x_%08x\n",
          ctx->c[0], ctx->c[1], ctx->c[2], ctx->c[3], ctx->c[4]);
-  printf("pad:   0x%08x_%08x_%08x_%08x\n",
-         ctx->pad[0], ctx->pad[1], ctx->pad[2], ctx->pad[3]);
+  printf("s:     0x%08x_%08x_%08x_%08x\n",
+         ctx->s[0], ctx->s[1], ctx->s[2], ctx->s[3]);
   printf("c_idx: 0x%08zx\n", ctx->c_idx);
   printf("\n");
 }
@@ -184,17 +184,20 @@ void crypto_poly1305_init(crypto_poly1305_ctx *ctx, const u8 key[32])
     // add 2^130 to every input block
     ctx->c[4] = 1;
     poly_clear_c(ctx);
-    // load r and pad (r has some of its bits cleared)
-    FOR (i, 0, 1) { ctx->r  [0] = load32_le(key           ) & 0x0fffffff; }
-    FOR (i, 1, 4) { ctx->r  [i] = load32_le(key + i*4     ) & 0x0ffffffc; }
-    FOR (i, 0, 4) { ctx->pad[i] = load32_le(key + i*4 + 16);              }
+    // load r and s (r has some of its bits cleared)
+    FOR (i, 0, 1) { ctx->r[0] = load32_le(key           ) & 0x0fffffff; }
+    FOR (i, 1, 4) { ctx->r[i] = load32_le(key + i*4     ) & 0x0ffffffc; }
+    FOR (i, 0, 4) { ctx->s[i] = load32_le(key + i*4 + 16);              }
 }
+
 
 void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
                             const u8 *message, size_t message_size)
 {
     // Align ourselves with block boundaries
     size_t align = MIN(ALIGN(ctx->c_idx, 16), message_size);
+    printf("align: 0x%08zx\n", align);
+
     poly_update(ctx, message, align);
     message      += align;
     message_size -= align;
@@ -238,11 +241,11 @@ void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
     const u64 u4 = (u3 >> 32) + ctx->h[4]; // <=          5
     // u4 indicates how many times we should subtract 2^130-5 (0 or 1)
 
-    // h + pad, minus 2^130-5 if u4 exceeds 3
-    const u64 uu0 = (u4 >> 2) * 5 + ctx->h[0] + ctx->pad[0]; // <= 2_00000003
-    const u64 uu1 = (uu0 >> 32)   + ctx->h[1] + ctx->pad[1]; // <= 2_00000000
-    const u64 uu2 = (uu1 >> 32)   + ctx->h[2] + ctx->pad[2]; // <= 2_00000000
-    const u64 uu3 = (uu2 >> 32)   + ctx->h[3] + ctx->pad[3]; // <= 2_00000000
+    // h + s, minus 2^130-5 if u4 exceeds 3
+    const u64 uu0 = (u4 >> 2) * 5 + ctx->h[0] + ctx->s[0]; // <= 2_00000003
+    const u64 uu1 = (uu0 >> 32)   + ctx->h[1] + ctx->s[1]; // <= 2_00000000
+    const u64 uu2 = (uu1 >> 32)   + ctx->h[2] + ctx->s[2]; // <= 2_00000000
+    const u64 uu3 = (uu2 >> 32)   + ctx->h[3] + ctx->s[3]; // <= 2_00000000
 
     store32_le(mac     , (u32)uu0);
     store32_le(mac +  4, (u32)uu1);

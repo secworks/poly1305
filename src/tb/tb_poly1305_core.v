@@ -140,8 +140,8 @@ module tb_poly1305_core();
       $display("c:     0x%08x_%08x_%08x_%08x_%08x",
                dut.c_reg[0], dut.c_reg[1], dut.c_reg[2],
                dut.c_reg[3], dut.c_reg[4]);
-      $display("pad:   0x%08x_%08x_%08x_%08x",
-               dut.pad_reg[0], dut.pad_reg[1], dut.pad_reg[2], dut.pad_reg[3]);
+      $display("s:     0x%08x_%08x_%08x_%08x",
+               dut.s_reg[0], dut.s_reg[1], dut.s_reg[2], dut.s_reg[3]);
       $display("\n\n");
     end
   endtask // dump_dut_state
