@@ -88,6 +88,7 @@ module poly1305(
   reg next_reg;
   reg next_new;
 
+
   reg finish_reg;
   reg finish_new;
 
@@ -100,7 +101,6 @@ module poly1305(
   reg [31 : 0]  key_reg [0 : 7];
   reg           key_we;
 
-  reg [127 : 0] mac_reg;
   reg           ready_reg;
 
 
@@ -165,7 +165,6 @@ module poly1305(
           blocklen_reg <= 5'h0;
           init_reg     <= 1'b0;
           next_reg     <= 1'b0;
-          mac_reg      <= 128'h0;
           ready_reg    <= 1'b0;
         end
       else
