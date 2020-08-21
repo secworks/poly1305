@@ -29,6 +29,7 @@ typedef struct {
 
 
 // Utility functions.
+void print_hexdata(uint8_t *data, uint32_t len);
 void print_context(crypto_poly1305_ctx *ctx);
 
 

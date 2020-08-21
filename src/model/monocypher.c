@@ -43,6 +43,20 @@ void crypto_wipe(void *secret, size_t size)
 
 
 //------------------------------------------------------------------
+// print_hexdata()
+// Dump hex data
+//------------------------------------------------------------------
+void print_hexdata(uint8_t *data, uint32_t len) {
+  uint32_t num_lines = len / 8;
+
+  for (int i = 0 ; i < num_lines * 8 ; i += 8)
+    printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+           data[i], data[i + 1], data[i + 2], data[i + 3],
+           data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
+}
+
+
+//------------------------------------------------------------------
 // dump_context()
 //
 // Print the poly1305 context.
@@ -90,6 +104,7 @@ static void poly_block(crypto_poly1305_ctx *ctx)
 
   printf("s0  = 0x%016llx, s1  = 0x%016llx, s2  = 0x%016llx\n", s0, s1, s2);
   printf("s3  = 0x%016llx, s4  = 0x%016x\n", s3, s4);
+  printf("\n");
 
   // Local all the things!
   const u32 r0 = ctx->r[0];       // r0  <= 0fffffff
@@ -103,6 +118,7 @@ static void poly_block(crypto_poly1305_ctx *ctx)
 
   printf("rr0 = 0x%016x, rr1 = 0x%016x, rr2 = 0x%016x, rr3 = 0x%016x\n",
          rr0, rr1, rr2, rr3);
+  printf("\n");
 
   // (h + c) * r, without carry propagation
   const u64 x0 = s0*r0 + s1*rr3 + s2*rr2 + s3*rr1 + s4*rr0; // <= 97ffffe007fffff8
@@ -113,6 +129,7 @@ static void poly_block(crypto_poly1305_ctx *ctx)
 
   printf("x0  = 0x%016llx, x1  = 0x%016llx, x2  = 0x%016llx\n", x0, x1, x2);
   printf("x3  = 0x%016llx, x4  = 0x%016x\n", x3, x4);
+  printf("\n");
 
   // partial reduction modulo 2^130 - 5
   const u32 u5 = x4 + (x3 >> 32); // u5 <= 7ffffff5
@@ -124,6 +141,7 @@ static void poly_block(crypto_poly1305_ctx *ctx)
 
   printf("u0  = 0x%016llx, u1  = 0x%016llx, u2  = 0x%016llx\n", u0, u1, u2);
   printf("u3  = 0x%016llx, u4  = 0x%016llx, u5  = 0x%016x\n", u3, u4, u5);
+  printf("\n");
 
   // Update the hash
   ctx->h[0] = u0 & 0xffffffff; // u0 <= 1_9ffffff0
@@ -152,6 +170,8 @@ static void poly_clear_c(crypto_poly1305_ctx *ctx)
 }
 
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 {
   printf("poly_take_input() called with input: 0x%02x: \n", input);
@@ -168,6 +188,8 @@ static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 }
 
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static void poly_update(crypto_poly1305_ctx *ctx,
                         const u8 *message, size_t message_size)
 
@@ -184,6 +206,9 @@ static void poly_update(crypto_poly1305_ctx *ctx,
     }
 }
 
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 void crypto_poly1305_init(crypto_poly1305_ctx *ctx, const u8 key[32])
 {
     // Initial hash is zero
@@ -200,6 +225,8 @@ void crypto_poly1305_init(crypto_poly1305_ctx *ctx, const u8 key[32])
 }
 
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
                             const u8 *message, size_t message_size)
 {
@@ -229,46 +256,89 @@ void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
     poly_update(ctx, message, message_size);
 }
 
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
 {
-    // Process the last block (if any)
-    if (ctx->c_idx != 0) {
-        // move the final 1 according to remaining input length
-        // (We may add less than 2^130 to the last input block)
-        ctx->c[4] = 0;
-        poly_take_input(ctx, 1);
-        // one last hash update
-        poly_block(ctx);
-    }
+  printf("\n");
+  printf("crypto_poly1305_final started\n");
+  printf("-----------------------------\n");
 
-    // check if we should subtract 2^130-5 by performing the
-    // corresponding carry propagation.
-    const u64 u0 = (u64)5     + ctx->h[0]; // <= 1_00000004
-    const u64 u1 = (u0 >> 32) + ctx->h[1]; // <= 1_00000000
-    const u64 u2 = (u1 >> 32) + ctx->h[2]; // <= 1_00000000
-    const u64 u3 = (u2 >> 32) + ctx->h[3]; // <= 1_00000000
-    const u64 u4 = (u3 >> 32) + ctx->h[4]; // <=          5
-    // u4 indicates how many times we should subtract 2^130-5 (0 or 1)
+  // Process the last block (if any)
+  if (ctx->c_idx != 0) {
+    // move the final 1 according to remaining input length
+    // (We may add less than 2^130 to the last input block)
+    ctx->c[4] = 0;
+    poly_take_input(ctx, 1);
+    // one last hash update
+    poly_block(ctx);
+  }
 
-    // h + s, minus 2^130-5 if u4 exceeds 3
-    const u64 uu0 = (u4 >> 2) * 5 + ctx->h[0] + ctx->s[0]; // <= 2_00000003
-    const u64 uu1 = (uu0 >> 32)   + ctx->h[1] + ctx->s[1]; // <= 2_00000000
-    const u64 uu2 = (uu1 >> 32)   + ctx->h[2] + ctx->s[2]; // <= 2_00000000
-    const u64 uu3 = (uu2 >> 32)   + ctx->h[3] + ctx->s[3]; // <= 2_00000000
+  printf("Context before processing:\n");
+  print_context(ctx);
 
-    store32_le(mac     , (u32)uu0);
-    store32_le(mac +  4, (u32)uu1);
-    store32_le(mac +  8, (u32)uu2);
-    store32_le(mac + 12, (u32)uu3);
+  // check if we should subtract 2^130-5 by performing the
+  // corresponding carry propagation.
+  const u64 u0 = (u64)5     + ctx->h[0]; // <= 1_00000004
+  const u64 u1 = (u0 >> 32) + ctx->h[1]; // <= 1_00000000
+  const u64 u2 = (u1 >> 32) + ctx->h[2]; // <= 1_00000000
+  const u64 u3 = (u2 >> 32) + ctx->h[3]; // <= 1_00000000
+  const u64 u4 = (u3 >> 32) + ctx->h[4]; // <=          5
+  // u4 indicates how many times we should subtract 2^130-5 (0 or 1)
 
-    WIPE_CTX(ctx);
+  // h + s, minus 2^130-5 if u4 exceeds 3
+  const u64 uu0 = (u4 >> 2) * 5 + ctx->h[0] + ctx->s[0]; // <= 2_00000003
+  const u64 uu1 = (uu0 >> 32)   + ctx->h[1] + ctx->s[1]; // <= 2_00000000
+  const u64 uu2 = (uu1 >> 32)   + ctx->h[2] + ctx->s[2]; // <= 2_00000000
+  const u64 uu3 = (uu2 >> 32)   + ctx->h[3] + ctx->s[3]; // <= 2_00000000
+
+  printf("Intermediate results during processing:\n");
+
+  printf("u0  = 0x%016llx, u1  = 0x%016llx, u2  = 0x%016llx\n", u0, u1, u2);
+  printf("u3  = 0x%016llx, u4  = 0x%016llx\n", u3, u4);
+  printf("\n");
+
+  printf("uu0 = 0x%016llx, uu1 = 0x%016llx\n", uu0, uu1);
+  printf("uu2 = 0x%016llx, uu3 = 0x%016llx\n", uu2, uu3);
+  printf("\n");
+
+  const u32 m0 = (u32)uu0;
+  const u32 m1 = (u32)uu1;
+  const u32 m2 = (u32)uu2;
+  const u32 m3 = (u32)uu3;
+
+  printf("m0 = 0x%08x, m1 = 0x%08x\n", m0, m1);
+  printf("m2 = 0x%08x, m3 = 0x%08x\n", m2, m3);
+  printf("\n");
+
+  store32_le(mac     , (u32)m0);
+  store32_le(mac +  4, (u32)m1);
+  store32_le(mac +  8, (u32)m2);
+  store32_le(mac + 12, (u32)m3);
+
+  printf("The resulting mac:\n");
+  print_hexdata(&mac[0], 16);
+  printf("\n");
+
+  printf("Context after processing:\n");
+  print_context(ctx);
+
+  WIPE_CTX(ctx);
+
+  printf("crypto_poly1305_final completed\n");
+  printf("-------------------------------\n");
+  printf("\n");
 }
 
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 void crypto_poly1305(u8     mac[16],  const u8 *message,
                      size_t message_size, const u8  key[32])
 {
-    crypto_poly1305_ctx ctx;
-    crypto_poly1305_init  (&ctx, key);
-    crypto_poly1305_update(&ctx, message, message_size);
-    crypto_poly1305_final (&ctx, mac);
+  crypto_poly1305_ctx ctx;
+  crypto_poly1305_init  (&ctx, key);
+  crypto_poly1305_update(&ctx, message, message_size);
+  crypto_poly1305_final (&ctx, mac);
 }
