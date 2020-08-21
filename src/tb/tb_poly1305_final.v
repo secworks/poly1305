@@ -78,16 +78,19 @@ module tb_poly1305_final();
   reg [31 : 0]  tb_s2;
   reg [31 : 0]  tb_s3;
 
-  wire [31 : 0] tb_uu0_new;
-  wire [31 : 0] tb_uu1_new;
-  wire [31 : 0] tb_uu2_new;
-  wire [31 : 0] tb_uu3_new;
+  wire [31 : 0] tb_hres0;
+  wire [31 : 0] tb_hres1;
+  wire [31 : 0] tb_hres2;
+  wire [31 : 0] tb_hres3;
 
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
   poly1305_final dut(
+                     .clk(tb_clk),
+                     .reset_n(tb_reset_n),
+
                      .h0(tb_h0),
                      .h1(tb_h1),
                      .h2(tb_h2),
@@ -99,10 +102,10 @@ module tb_poly1305_final();
                      .s2(tb_s2),
                      .s3(tb_s3),
 
-                     .uu0_new(tb_uu0_new),
-                     .uu1_new(tb_uu1_new),
-                     .uu2_new(tb_uu2_new),
-                     .uu3_new(tb_uu3_new)
+                     .hres0(tb_hres0),
+                     .hres1(tb_hres1),
+                     .hres2(tb_hres2),
+                     .hres3(tb_hres3)
                     );
 
 
@@ -153,18 +156,18 @@ module tb_poly1305_final();
 
       $display("Internal values:");
       $display("u0:  0x%016x  u1: 0x%016x  u2: 0x%016x",
-               dut.final_logic.u0, dut.final_logic.u1, dut.final_logic.u2);
+               dut.u0_reg, dut.u1_reg, dut.u2_reg);
       $display("u3:  0x%016x  u4: 0x%016x",
-               dut.final_logic.u3, dut.final_logic.u4);
+               dut.u3_reg, dut.u4_reg);
       $display("");
 
-      $display("uu0:  0x%016x  uu1: 0x%016x", dut.uu0, dut.uu1);
-      $display("uu2:  0x%016x  uu3: 0x%016x", dut.uu2, dut.uu3);
+      $display("uu0:  0x%016x  uu1: 0x%016x", dut.uu0_reg, dut.uu1_reg);
+      $display("uu2:  0x%016x  uu3: 0x%016x", dut.uu2_reg, dut.uu3_reg);
       $display("");
 
       $display("Outputs:");
-      $display("uu0: 0x%08x  uu1: 0x%08x  uu2: 0x%08x  uu3: 0x%08x",
-               dut.uu0_new, dut.uu1_new, dut.uu2_new, dut.uu3_new);
+      $display("hres0: 0x%08x  hres1: 0x%08x  hres2: 0x%08x  hres3:0x%08x",
+               dut.hres0, dut.hres1, dut.hres2, dut.hres3);
       $display("");
     end
   endtask // dump_dut_state
@@ -261,34 +264,34 @@ module tb_poly1305_final();
       tb_s3 = 32'h1bf54941;
 
       tb_debug = 1;
-      #(30 * CLK_PERIOD);
+      #(10 * CLK_PERIOD);
       tb_debug = 0;
 
-      if (tb_uu0_new != 32'hc11d06a8)
+      if (tb_hres0 != 32'hc11d06a8)
         begin
-          $display("Error in uu00. Expected: 0xc11d06a8. Got: 0x%08x\n",
-                   tb_uu0_new);
+          $display("Error in hres0. Expected: 0xc11d06a8. Got: 0x%08x\n",
+                   tb_hres0);
           incorrect = incorrect + 1;
         end
 
-      if (tb_uu1_new != 32'hc6365130)
+      if (tb_hres1 != 32'hc6365130)
         begin
-          $display("Error in uu1. Expected: 0xc6365130. Got: 0x%08x\n",
-                   tb_uu1_new);
+          $display("Error in hres1. Expected: 0xc6365130. Got: 0x%08x\n",
+                   tb_hres1);
           incorrect = incorrect + 1;
         end
 
-      if (tb_uu2_new != 32'haf8b2bc2)
+      if (tb_hres2 != 32'haf8b2bc2)
         begin
-          $display("Error in uu2. Expected: 0xaf8b2bc2. Got: 0x%08x\n",
-                   tb_uu2_new);
+          $display("Error in hres2. Expected: 0xaf8b2bc2. Got: 0x%08x\n",
+                   tb_hres2);
           incorrect = incorrect + 1;
         end
 
-      if (tb_uu3_new != 32'ha927010c)
+      if (tb_hres3 != 32'ha927010c)
         begin
-          $display("Error in uu3. Expected: 0xa927010c. Got: 0x%08x\n",
-                   tb_uu3_new);
+          $display("Error in hres3. Expected: 0xa927010c. Got: 0x%08x\n",
+                   tb_hres3);
           incorrect = incorrect + 1;
         end
 

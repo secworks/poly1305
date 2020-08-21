@@ -115,10 +115,10 @@ module poly1305_core(
   reg load_block;
   reg mac_update;
 
-  wire [31 : 0] uu0_new;
-  wire [31 : 0] uu1_new;
-  wire [31 : 0] uu2_new;
-  wire [31 : 0] uu3_new;
+  wire [31 : 0] hres0;
+  wire [31 : 0] hres1;
+  wire [31 : 0] hres2;
+  wire [31 : 0] hres3;
 
 
   //----------------------------------------------------------------
@@ -164,6 +164,9 @@ module poly1305_core(
                              );
 
   poly1305_final final_inst(
+                            .clk(clk),
+                            .reset_n(reset_n),
+
                             .h0(h_reg[0]),
                             .h1(h_reg[1]),
                             .h2(h_reg[2]),
@@ -175,10 +178,10 @@ module poly1305_core(
                             .s2(s_reg[2]),
                             .s3(s_reg[3]),
 
-                            .uu0_new(uu0_new),
-                            .uu1_new(uu1_new),
-                            .uu2_new(uu2_new),
-                            .uu3_new(uu3_new)
+                            .hres0(hres0),
+                            .hres1(hres1),
+                            .hres2(hres2),
+                            .hres3(hres3)
                            );
 
 
@@ -325,10 +328,10 @@ module poly1305_core(
 
       if (mac_update)
         begin
-          mac_new[0] = le(uu0_new);
-          mac_new[1] = le(uu1_new);
-          mac_new[2] = le(uu2_new);
-          mac_new[3] = le(uu3_new);
+          mac_new[0] = le(hres0);
+          mac_new[1] = le(hres1);
+          mac_new[2] = le(hres2);
+          mac_new[3] = le(hres3);
           mac_we     = 1'h1;
         end
     end // poly1305_core_logic

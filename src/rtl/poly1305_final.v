@@ -35,6 +35,9 @@
 //======================================================================
 
 module poly1305_final(
+                      input wire          clk,
+                      input wire          reset_n,
+
                       input wire [31 : 0] h0,
                       input wire [31 : 0] h1,
                       input wire [31 : 0] h2,
@@ -46,52 +49,100 @@ module poly1305_final(
                       input wire [31 : 0] s2,
                       input wire [31 : 0] s3,
 
-                      output wire [31 : 0] uu0_new,
-                      output wire [31 : 0] uu1_new,
-                      output wire [31 : 0] uu2_new,
-                      output wire [31 : 0] uu3_new
+                      output wire [31 : 0] hres0,
+                      output wire [31 : 0] hres1,
+                      output wire [31 : 0] hres2,
+                      output wire [31 : 0] hres3
                       );
 
+
   //----------------------------------------------------------------
-  // Registers (Variables)
+  // Registers.
   //----------------------------------------------------------------
-  reg [63 : 0] uu0;
-  reg [63 : 0] uu1;
-  reg [63 : 0] uu2;
-  reg [63 : 0] uu3;
+  reg [63 : 0] u0_reg;
+  reg [63 : 0] u0_new;
+  reg [63 : 0] u1_reg;
+  reg [63 : 0] u1_new;
+  reg [63 : 0] u2_reg;
+  reg [63 : 0] u2_new;
+  reg [63 : 0] u3_reg;
+  reg [63 : 0] u3_new;
+  reg [63 : 0] u4_reg;
+  reg [63 : 0] u4_new;
+
+  reg [63 : 0] uu0_reg;
+  reg [63 : 0] uu0_new;
+  reg [63 : 0] uu1_reg;
+  reg [63 : 0] uu1_new;
+  reg [63 : 0] uu2_reg;
+  reg [63 : 0] uu2_new;
+  reg [63 : 0] uu3_reg;
+  reg [63 : 0] uu3_new;
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign uu0_new  = uu0[31 : 0];
-  assign uu1_new  = uu1[31 : 0];
-  assign uu2_new  = uu2[31 : 0];
-  assign uu3_new  = uu3[31 : 0];
+  assign hres0 = uu0_reg[31 : 0];
+  assign hres1 = uu1_reg[31 : 0];
+  assign hres2 = uu2_reg[31 : 0];
+  assign hres3 = uu3_reg[31 : 0];
 
 
   //----------------------------------------------------------------
-  // final_logic
+  // reg_update
+  //
+  // Update functionality for all registers in the core.
+  // All registers are positive edge triggered with synchronous
+  // active low reset.
   //----------------------------------------------------------------
-  always @*
-    begin : final_logic
-      reg [63 : 0] u0;
-      reg [63 : 0] u1;
-      reg [63 : 0] u2;
-      reg [63 : 0] u3;
-      reg [63 : 0] u4;
+   always @ (posedge clk)
+     begin : reg_update
+       if (!reset_n)
+         begin
+           u0_reg  <= 64'h0;
+           u1_reg  <= 64'h0;
+           u2_reg  <= 64'h0;
+           u3_reg  <= 64'h0;
+           u4_reg  <= 64'h0;
 
-      u0 = 64'h5       + h0; // <= 1_00000004
-      u1 = u0[63 : 32] + h1; // <= 1_00000000
-      u2 = u1[63 : 32] + h2; // <= 1_00000000
-      u3 = u2[63 : 32] + h3; // <= 1_00000000
-      u4 = u3[63 : 32] + h4; // <=          5
+           uu0_reg <= 64'h0;
+           uu1_reg <= 64'h0;
+           uu2_reg <= 64'h0;
+           uu3_reg <= 64'h0;
+         end
+       else
+         begin
+           u0_reg  <= u0_new;
+           u1_reg  <= u1_new;
+           u2_reg  <= u2_new;
+           u3_reg  <= u3_new;
+           u4_reg  <= u4_new;
 
-      uu0 = (u4[63 : 2] * 5) + h0 + s0; // <= 2_00000003
-      uu1 = uu0[63 : 32]     + h1 + s1; // <= 2_00000000
-      uu2 = uu1[63 : 32]     + h2 + s2; // <= 2_00000000
-      uu3 = uu2[63 : 32]     + h3 + s3; // <= 2_00000000
-    end
+           uu0_reg <= uu0_new;
+           uu1_reg <= uu1_new;
+           uu2_reg <= uu2_new;
+           uu3_reg <= uu3_new;
+         end
+     end // reg_update
+
+
+   //----------------------------------------------------------------
+   // final_logic
+   //----------------------------------------------------------------
+   always @*
+     begin : final_logic
+       u0_new = 64'h5           + h0; // <= 1_00000004
+       u1_new = u0_reg[63 : 32] + h1; // <= 1_00000000
+       u2_new = u1_reg[63 : 32] + h2; // <= 1_00000000
+       u3_new = u2_reg[63 : 32] + h3; // <= 1_00000000
+       u4_new = u3_reg[63 : 32] + h4; // <=          5
+
+       uu0_new = (u4_reg[63 : 2] * 5) + h0 + s0; // <= 2_00000003
+       uu1_new = uu0_reg[63 : 32]     + h1 + s1; // <= 2_00000000
+       uu2_new = uu1_reg[63 : 32]     + h2 + s2; // <= 2_00000000
+       uu3_new = uu2_reg[63 : 32]     + h3 + s3; // <= 2_00000000
+     end
 
 endmodule // poly1305_final
 
