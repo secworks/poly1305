@@ -249,45 +249,45 @@ module tb_poly1305_final();
 
       incorrect = 0;
 
-      tb_h0 = 32'h344b30de;
-      tb_h1 = 32'hcccfb4ea;
-      tb_h2 = 32'hb0337fa7;
-      tb_h3 = 32'hd8adaf23;
+      tb_h0 = 32'h369d03a7;
+      tb_h1 = 32'hc8844335;
+      tb_h2 = 32'hff946c77;
+      tb_h3 = 32'h8d31b7ca;
       tb_h4 = 32'h00000002;
 
-      tb_s0 = 32'h00017075;
-      tb_s1 = 32'h00000000;
-      tb_s2 = 32'h00000000;
-      tb_s3 = 32'h00000000;
+      tb_s0 = 32'h8a800301;
+      tb_s1 = 32'hfdb20dfb;
+      tb_s2 = 32'haff6bf4a;
+      tb_s3 = 32'h1bf54941;
 
       tb_debug = 1;
       #(30 * CLK_PERIOD);
       tb_debug = 0;
 
-      if (tb_uu0_new != 32'h369d03a7)
+      if (tb_uu0_new != 32'hc11d06a8)
         begin
-          $display("Error in uu00. Expected: 0x369d03a7. Got: 0x%08x\n",
+          $display("Error in uu00. Expected: 0xc11d06a8. Got: 0x%08x\n",
                    tb_uu0_new);
           incorrect = incorrect + 1;
         end
 
-      if (tb_uu1_new != 32'hc8844335)
+      if (tb_uu1_new != 32'hc6365130)
         begin
-          $display("Error in uu1. Expected: 0xc8844335. Got: 0x%08x\n",
+          $display("Error in uu1. Expected: 0xc6365130. Got: 0x%08x\n",
                    tb_uu1_new);
           incorrect = incorrect + 1;
         end
 
-      if (tb_uu2_new != 32'hff946c77)
+      if (tb_uu2_new != 32'haf8b2bc2)
         begin
-          $display("Error in uu2. Expected: 0xff946c77. Got: 0x%08x\n",
+          $display("Error in uu2. Expected: 0xaf8b2bc2. Got: 0x%08x\n",
                    tb_uu2_new);
           incorrect = incorrect + 1;
         end
 
-      if (tb_uu3_new != 32'h8d31b7ca)
+      if (tb_uu3_new != 32'ha927010c)
         begin
-          $display("Error in uu3. Expected: 0x8d31b7ca. Got: 0x%08x\n",
+          $display("Error in uu3. Expected: 0xa927010c. Got: 0x%08x\n",
                    tb_uu3_new);
           incorrect = incorrect + 1;
         end
