@@ -115,6 +115,11 @@ module poly1305_core(
   reg load_block;
   reg mac_update;
 
+  wire [31 : 0] uu0_new;
+  wire [31 : 0] uu1_new;
+  wire [31 : 0] uu2_new;
+  wire [31 : 0] uu3_new;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -130,30 +135,48 @@ module poly1305_core(
   //----------------------------------------------------------------
   // Module instantiations.
   //----------------------------------------------------------------
-  poly1305_pblock pblock(
-                         .h0(h_reg[0]),
-                         .h1(h_reg[1]),
-                         .h2(h_reg[2]),
-                         .h3(h_reg[3]),
-                         .h4(h_reg[4]),
+  poly1305_pblock pblock_inst(
+                              .h0(h_reg[0]),
+                              .h1(h_reg[1]),
+                              .h2(h_reg[2]),
+                              .h3(h_reg[3]),
+                              .h4(h_reg[4]),
 
-                         .c0(c_reg[0]),
-                         .c1(c_reg[1]),
-                         .c2(c_reg[2]),
-                         .c3(c_reg[3]),
-                         .c4(c_reg[4]),
+                              .c0(c_reg[0]),
+                              .c1(c_reg[1]),
+                              .c2(c_reg[2]),
+                              .c3(c_reg[3]),
+                              .c4(c_reg[4]),
 
-                         .r0(r_reg[0]),
-                         .r1(r_reg[1]),
-                         .r2(r_reg[2]),
-                         .r3(r_reg[3]),
+                              .r0(r_reg[0]),
+                              .r1(r_reg[1]),
+                              .r2(r_reg[2]),
+                              .r3(r_reg[3]),
 
-                         .h0_new(h_new[0]),
-                         .h1_new(h_new[1]),
-                         .h2_new(h_new[2]),
-                         .h3_new(h_new[3]),
-                         .h4_new(h_new[4])
-                        );
+                              .h0_new(h_new[0]),
+                              .h1_new(h_new[1]),
+                              .h2_new(h_new[2]),
+                              .h3_new(h_new[3]),
+                              .h4_new(h_new[4])
+                             );
+
+  poly1305_final final_inst(
+                            .h0(h_reg[0]),
+                            .h1(h_reg[1]),
+                            .h2(h_reg[2]),
+                            .h3(h_reg[3]),
+                            .h4(h_reg[4]),
+
+                            .s0(s_reg[0]),
+                            .s1(s_reg[1]),
+                            .s2(s_reg[2]),
+                            .s3(s_reg[3]),
+
+                            .uu0_new(uu0_new),
+                            .uu1_new(uu1_new),
+                            .uu2_new(uu2_new),
+                            .uu3_new(uu3_new)
+                           );
 
 
   //----------------------------------------------------------------
@@ -299,10 +322,10 @@ module poly1305_core(
 
       if (mac_update)
         begin
-          mac_new[0] = 32'h0;
-          mac_new[1] = 32'h0;
-          mac_new[2] = 32'h0;
-          mac_new[3] = 32'h0;
+          mac_new[0] = le(uu0_new);
+          mac_new[1] = le(uu1_new);
+          mac_new[2] = le(uu2_new);
+          mac_new[3] = le(uu3_new);
           mac_we     = 1'h1;
         end
     end // poly1305_core_logic
@@ -347,7 +370,7 @@ module poly1305_core(
 
             if (finish)
               begin
-                state_final = 1'h1;
+                state_final            = 1'h1;
                 ready_new              = 1'h0;
                 ready_we               = 1'h1;
                 poly1305_core_ctrl_new = CTRL_FINAL;
@@ -365,6 +388,7 @@ module poly1305_core(
 
         CTRL_FINAL:
           begin
+            mac_update             = 1'h1;
             poly1305_core_ctrl_new = CTRL_DONE;
             poly1305_core_ctrl_we  = 1'h1;
           end

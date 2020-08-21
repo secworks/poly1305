@@ -39,7 +39,10 @@
 PBLOCK_SRC =../src/rtl/poly1305_pblock.v
 TB_PBLOCK_SRC =../src/tb/tb_poly1305_pblock.v
 
-CORE_SRC =../src/rtl/poly1305_core.v $(PBLOCK_SRC)
+FINAL_SRC =../src/rtl/poly1305_final.v
+TB_FINAL_SRC =../src/tb/tb_poly1305_final.v
+
+CORE_SRC =../src/rtl/poly1305_core.v $(PBLOCK_SRC) $(FINAL_SRC)
 TB_CORE_SRC =../src/tb/tb_poly1305_core.v
 
 TOP_SRC =../src/rtl/poly1305.v $(CORE_SRC)
@@ -53,7 +56,7 @@ LINT=verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
-all: top.sim core.sim pblock.sim
+all: top.sim core.sim pblock.sim  final.sim
 
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
@@ -68,6 +71,10 @@ pblock.sim: $(TB_PBLOCK_SRC) $(PBLOCK_SRC)
 	$(CC) $(CC_FLAGS) -o pblock.sim $(TB_PBLOCK_SRC) $(PBLOCK_SRC)
 
 
+final.sim: $(TB_FINAL_SRC) $(FINAL_SRC)
+	$(CC) $(CC_FLAGS) -o final.sim $(TB_FINAL_SRC) $(FINAL_SRC)
+
+
 sim-top: top.sim
 	./top.sim
 
@@ -80,6 +87,10 @@ sim-pblock: pblock.sim
 	./pblock.sim
 
 
+sim-final: final.sim
+	./final.sim
+
+
 lint:  $(TOP_SRC)
 	$(LINT) $(LINT_FLAGS) $(TOP_SRC)
 
@@ -89,6 +100,7 @@ clean:
 	rm -f top.sim
 	rm -f core.sim
 	rm -f pblock.sim
+	rm -f final.sim
 
 
 help:
@@ -98,9 +110,11 @@ help:
 	@echo "top.sim:    Build Poly1305 top level simulation target."
 	@echo "core.sim:   Build Poly1305 core simulation target."
 	@echo "pblock.sim: Build Poly1305 poly block simulation target."
+	@echo "final.sim:  Build Poly1305 final logic simulation target."
 	@echo "sim-top:    Run Poly1305 top level simulation."
 	@echo "sim-core:   Run Poly1305 core simulation."
 	@echo "sim-pblock: Run Poly1305 poly block simulation."
+	@echo "sim-final:  Run Poly1305 final logic simulation."
 	@echo "lint:       Lint the RTL source."
 	@echo "clean:      Remove build targets."
 
