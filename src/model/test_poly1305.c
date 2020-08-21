@@ -110,12 +110,12 @@ int p1305_rfc8439() {
   printf("Context after poly1305_init()\n");
   print_context(&my_ctx);
 
-  printf("Calling poly1305_update() with data\n");
+  printf("Calling poly1305_update() with 34 byte message.\n");
   crypto_poly1305_update(&my_ctx, &my_message[0], 34);
   printf("Context after poly1305_update()\n");
   print_context(&my_ctx);
 
-  printf("Calling poly1305_final() with data\n");
+  printf("Calling poly1305_final() to get tag.\n");
   crypto_poly1305_final(&my_ctx, &my_tag[0]);
   printf("Context after poly1305_final()\n");
   print_context(&my_ctx);

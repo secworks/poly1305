@@ -74,7 +74,9 @@ void print_context(crypto_poly1305_ctx *ctx) {
 //   ctx->h <= 4_ffffffff_ffffffff_ffffffff_ffffffff
 static void poly_block(crypto_poly1305_ctx *ctx)
 {
-  printf("Inside poly_block.\n");
+  printf("\n");
+  printf("poly_block started\n");
+  printf("------------------\n");
   printf("Context before processing:\n");
   print_context(ctx);
 
@@ -86,53 +88,56 @@ static void poly_block(crypto_poly1305_ctx *ctx)
   const u64 s3 = ctx->h[3] + (u64)ctx->c[3]; // s3 <= 1_fffffffe
   const u32 s4 = ctx->h[4] +      ctx->c[4]; // s4 <=          5
 
-  printf("s0  = 0x%016llx, s1  = 0x%016llx, s2  = 0x%016llx, s3  = 0x%016llx, s4  = 0x%016x\n",
-         s0, s1, s2, s3, s4);
+  printf("s0  = 0x%016llx, s1  = 0x%016llx, s2  = 0x%016llx\n", s0, s1, s2);
+  printf("s3  = 0x%016llx, s4  = 0x%016x\n", s3, s4);
 
-    // Local all the things!
-    const u32 r0 = ctx->r[0];       // r0  <= 0fffffff
-    const u32 r1 = ctx->r[1];       // r1  <= 0ffffffc
-    const u32 r2 = ctx->r[2];       // r2  <= 0ffffffc
-    const u32 r3 = ctx->r[3];       // r3  <= 0ffffffc
-    const u32 rr0 = (r0 >> 2) * 5;  // rr0 <= 13fffffb // lose 2 bits...
-    const u32 rr1 = (r1 >> 2) + r1; // rr1 <= 13fffffb // rr1 == (r1 >> 2) * 5
-    const u32 rr2 = (r2 >> 2) + r2; // rr2 <= 13fffffb // rr1 == (r2 >> 2) * 5
-    const u32 rr3 = (r3 >> 2) + r3; // rr3 <= 13fffffb // rr1 == (r3 >> 2) * 5
+  // Local all the things!
+  const u32 r0 = ctx->r[0];       // r0  <= 0fffffff
+  const u32 r1 = ctx->r[1];       // r1  <= 0ffffffc
+  const u32 r2 = ctx->r[2];       // r2  <= 0ffffffc
+  const u32 r3 = ctx->r[3];       // r3  <= 0ffffffc
+  const u32 rr0 = (r0 >> 2) * 5;  // rr0 <= 13fffffb // lose 2 bits...
+  const u32 rr1 = (r1 >> 2) + r1; // rr1 <= 13fffffb // rr1 == (r1 >> 2) * 5
+  const u32 rr2 = (r2 >> 2) + r2; // rr2 <= 13fffffb // rr1 == (r2 >> 2) * 5
+  const u32 rr3 = (r3 >> 2) + r3; // rr3 <= 13fffffb // rr1 == (r3 >> 2) * 5
 
   printf("rr0 = 0x%016x, rr1 = 0x%016x, rr2 = 0x%016x, rr3 = 0x%016x\n",
          rr0, rr1, rr2, rr3);
 
-    // (h + c) * r, without carry propagation
-    const u64 x0 = s0*r0 + s1*rr3 + s2*rr2 + s3*rr1 + s4*rr0;//<=97ffffe007fffff8
-    const u64 x1 = s0*r1 + s1*r0  + s2*rr3 + s3*rr2 + s4*rr1;//<=8fffffe20ffffff6
-    const u64 x2 = s0*r2 + s1*r1  + s2*r0  + s3*rr3 + s4*rr2;//<=87ffffe417fffff4
-    const u64 x3 = s0*r3 + s1*r2  + s2*r1  + s3*r0  + s4*rr3;//<=7fffffe61ffffff2
-    const u32 x4 = s4 * (r0 & 3); // ...recover 2 bits      //<=               f
+  // (h + c) * r, without carry propagation
+  const u64 x0 = s0*r0 + s1*rr3 + s2*rr2 + s3*rr1 + s4*rr0; // <= 97ffffe007fffff8
+  const u64 x1 = s0*r1 + s1*r0  + s2*rr3 + s3*rr2 + s4*rr1; // <= 8fffffe20ffffff6
+  const u64 x2 = s0*r2 + s1*r1  + s2*r0  + s3*rr3 + s4*rr2; // <= 87ffffe417fffff4
+  const u64 x3 = s0*r3 + s1*r2  + s2*r1  + s3*r0  + s4*rr3; // <= 7fffffe61ffffff2
+  const u32 x4 = s4 * (r0 & 3); // ...recover 2 bits        // <=                f
 
-  printf("x0  = 0x%016llx, x1  = 0x%016llx, x2  = 0x%016llx, x3  = 0x%016llx, x4  = 0x%016x\n",
-         x0, x1, x2, x3, x4);
+  printf("x0  = 0x%016llx, x1  = 0x%016llx, x2  = 0x%016llx\n", x0, x1, x2);
+  printf("x3  = 0x%016llx, x4  = 0x%016x\n", x3, x4);
 
-    // partial reduction modulo 2^130 - 5
-    const u32 u5 = x4 + (x3 >> 32); // u5 <= 7ffffff5
-    const u64 u0 = (u5 >>  2) * 5 + (x0 & 0xffffffff);
-    const u64 u1 = (u0 >> 32)     + (x1 & 0xffffffff) + (x0 >> 32);
-    const u64 u2 = (u1 >> 32)     + (x2 & 0xffffffff) + (x1 >> 32);
-    const u64 u3 = (u2 >> 32)     + (x3 & 0xffffffff) + (x2 >> 32);
-    const u64 u4 = (u3 >> 32)     + (u5 & 3);
+  // partial reduction modulo 2^130 - 5
+  const u32 u5 = x4 + (x3 >> 32); // u5 <= 7ffffff5
+  const u64 u0 = (u5 >>  2) * 5 + (x0 & 0xffffffff);
+  const u64 u1 = (u0 >> 32)     + (x1 & 0xffffffff) + (x0 >> 32);
+  const u64 u2 = (u1 >> 32)     + (x2 & 0xffffffff) + (x1 >> 32);
+  const u64 u3 = (u2 >> 32)     + (x3 & 0xffffffff) + (x2 >> 32);
+  const u64 u4 = (u3 >> 32)     + (u5 & 3);
 
-  printf("u0  = 0x%016llx, u1  = 0x%016llx, u2  = 0x%016llx, u3  = 0x%016llx, u4  = 0x%016llx, u5  = 0x%016x\n",
-         u0, u1, u2, u3, u4, u5);
+  printf("u0  = 0x%016llx, u1  = 0x%016llx, u2  = 0x%016llx\n", u0, u1, u2);
+  printf("u3  = 0x%016llx, u4  = 0x%016llx, u5  = 0x%016x\n", u3, u4, u5);
 
-    // Update the hash
-    ctx->h[0] = u0 & 0xffffffff; // u0 <= 1_9ffffff0
-    ctx->h[1] = u1 & 0xffffffff; // u1 <= 1_97ffffe0
-    ctx->h[2] = u2 & 0xffffffff; // u2 <= 1_8fffffe2
-    ctx->h[3] = u3 & 0xffffffff; // u3 <= 1_87ffffe4
-    ctx->h[4] = (u32)u4;         // u4 <=          4
+  // Update the hash
+  ctx->h[0] = u0 & 0xffffffff; // u0 <= 1_9ffffff0
+  ctx->h[1] = u1 & 0xffffffff; // u1 <= 1_97ffffe0
+  ctx->h[2] = u2 & 0xffffffff; // u2 <= 1_8fffffe2
+  ctx->h[3] = u3 & 0xffffffff; // u3 <= 1_87ffffe4
+  ctx->h[4] = (u32)u4;         // u4 <=          4
 
-    printf("Context after processing:\n");
-    print_context(ctx);
-    printf("\n");
+  printf("\n");
+  printf("Context after pblock processing:\n");
+  print_context(ctx);
+  printf("poly_block completed\n");
+  printf("--------------------\n");
+  printf("\n");
 }
 
 
@@ -165,12 +170,16 @@ static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 
 static void poly_update(crypto_poly1305_ctx *ctx,
                         const u8 *message, size_t message_size)
+
 {
-    FOR (i, 0, message_size) {
+  printf("Inside poly_update.\n");
+
+  FOR (i, 0, message_size) {
         poly_take_input(ctx, message[i]);
         if (ctx->c_idx == 16) {
-            poly_block(ctx);
-            poly_clear_c(ctx);
+          printf("Here we do some magic calling poly_block() and then poly_clear_c()\n");
+          poly_block(ctx);
+          poly_clear_c(ctx);
         }
     }
 }
