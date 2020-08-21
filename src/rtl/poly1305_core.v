@@ -367,7 +367,8 @@ module poly1305_core(
 
             if (next)
               begin
-                state_update = 1'h1;
+                load_block             = 1'h1;
+                state_update           = 1'h1;
                 ready_new              = 1'h0;
                 ready_we               = 1'h1;
                 poly1305_core_ctrl_new = CTRL_NEXT;
