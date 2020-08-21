@@ -131,12 +131,6 @@ module poly1305_core(
   // Module instantiations.
   //----------------------------------------------------------------
   poly1305_pblock pblock(
-                         .clk(clk),
-                         .reset_n(reset_n),
-
-                         .next(pblock_next),
-                         .ready(pblock_ready),
-
                          .h0(h_reg[0]),
                          .h1(h_reg[1]),
                          .h2(h_reg[2]),

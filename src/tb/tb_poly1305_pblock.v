@@ -57,6 +57,7 @@ module tb_poly1305_pblock();
   reg [31 : 0] cycle_ctr;
   reg [31 : 0] error_ctr;
   reg [31 : 0] tc_ctr;
+  integer      incorrect;
 
   reg           tb_debug;
 
@@ -94,12 +95,6 @@ module tb_poly1305_pblock();
   // Device Under Test.
   //----------------------------------------------------------------
   poly1305_pblock dut(
-                      .clk(tb_clk),
-                      .reset_n(tb_reset_n),
-
-                      .next(tb_next),
-                      .ready(tb_ready),
-
                       .h0(tb_h0),
                       .h1(tb_h1),
                       .h2(tb_h2),
@@ -172,15 +167,29 @@ module tb_poly1305_pblock();
                dut.r0, dut.r1, dut.r2, dut.r3);
       $display("");
 
-      $display("Intermediate results:");
-      $display("s0:  0x%09x  s1: 0x%09x  s2: 0x%09x  s3: 0x%09x  s4: 0x%9x",
-               dut.s0_reg, dut.s1_reg, dut.s2_reg, dut.s3_reg, dut.s4_reg);
+      $display("Internal values:");
+      $display("s0:  0x%016x  s1: 0x%016x  s2: 0x%016x",
+               dut.pblock_logic.s0, dut.pblock_logic.s1, dut.pblock_logic.s2);
+      $display("s3:  0x%016x  s4: 0x%016x",
+               dut.pblock_logic.s3, dut.pblock_logic.s4);
+      $display("");
+
+
       $display("rr0: 0x%08x  rr1: 0x%08x  rr2: 0x%08x  rr3: 0x%08x",
-               dut.rr0_reg, dut.rr1_reg, dut.rr2_reg, dut.rr3_reg);
-      $display("x0:  0x%016x  x1:  0x%016x  x2:  0x%016x  x3:  0x%016x  x4: 0x%016x",
-               dut.x0_reg, dut.x1_reg, dut.x2_reg, dut.x3_reg, dut.x4_reg);
-      $display("u0:  0x%016x  u1:  0x%016x  u2:  0x%016x  u3:  0x%016x  u4: 0x%016x  u5: 0x%08x",
-               dut.u0_reg, dut.u1_reg, dut.u2_reg, dut.u3_reg, dut.u4_reg, dut.u5_reg);
+               dut.pblock_logic.rr0, dut.pblock_logic.rr1,
+               dut.pblock_logic.rr2, dut.pblock_logic.rr3);
+      $display("");
+
+      $display("x0:  0x%016x  x1:  0x%016x  x2:  0x%016x",
+               dut.pblock_logic.x0, dut.pblock_logic.x1, dut.pblock_logic.x2);
+      $display("x3:  0x%016x  x4: 0x%016x",
+               dut.pblock_logic.x3, dut.pblock_logic.x4);
+      $display("");
+
+      $display("u0:  0x%016x  u1:  0x%016x  u2:  0x%016x",
+               dut.u0, dut.u1, dut.u2);
+      $display("u3:  0x%016x  u4: 0x%016x  u5: 0x%08x",
+               dut.u0, dut.u1, dut.u2);
       $display("");
 
 
@@ -265,38 +274,6 @@ module tb_poly1305_pblock();
 
 
   //----------------------------------------------------------------
-  // test_aa;
-  //
-  // A very simple test case that sets all inputs to a known,
-  // not all zero or not all one bit pattern.
-  //----------------------------------------------------------------
-  task test_aa;
-    begin : test_aa
-      tb_h0 = 32'haaaaaaaa;
-      tb_h1 = 32'haaaaaaaa;
-      tb_h2 = 32'haaaaaaaa;
-      tb_h3 = 32'haaaaaaaa;
-      tb_h4 = 32'haaaaaaaa;
-
-      tb_c0 = 32'haaaaaaaa;
-      tb_c1 = 32'haaaaaaaa;
-      tb_c2 = 32'haaaaaaaa;
-      tb_c3 = 32'haaaaaaaa;
-      tb_c4 = 32'haaaaaaaa;
-
-      tb_r0 = 32'haaaaaaaa;
-      tb_r1 = 32'haaaaaaaa;
-      tb_r2 = 32'haaaaaaaa;
-      tb_r3 = 32'haaaaaaaa;
-
-      tb_debug = 1;
-      #(100 * CLK_PERIOD);
-      tb_debug = 0;
-    end
-  endtask // test_aa
-
-
-  //----------------------------------------------------------------
   // test_rfc8349;
   //
   // Test case that uses the test vectors from RFC 8349,
@@ -306,6 +283,8 @@ module tb_poly1305_pblock();
   task test_rfc8349;
     begin : test_rfc8349
       $display("*** test_rfc8349 started.\n");
+
+      incorrect = 0;
 
       tb_h0 = 32'h344b30de;
       tb_h1 = 32'hcccfb4ea;
@@ -328,7 +307,40 @@ module tb_poly1305_pblock();
       #(30 * CLK_PERIOD);
       tb_debug = 0;
 
-      $display("*** test_rfc8349 completed.\n");
+      if (tb_h0_new != 32'h369d03a7)
+        begin
+          $display("Error in h0. Expected: 0x369d03a7. Got: 0x%08x\n", tb_h0_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h1_new != 32'hc8844335)
+        begin
+          $display("Error in h1. Expected: 0xc8844335. Got: 0x%08x\n", tb_h1_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h2_new != 32'hff946c77)
+        begin
+          $display("Error in h2. Expected: 0xff946c77. Got: 0x%08x\n", tb_h2_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h3_new != 32'h8d31b7ca)
+        begin
+          $display("Error in h3. Expected: 0x8d31b7ca. Got: 0x%08x\n", tb_h3_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h4_new != 32'h00000002)
+        begin
+          $display("Error in h4. Expected: 0x00000002. Got: 0x%08x\n", tb_h4_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (!incorrect)
+        $display("*** test_rfc8349 successfully completed.\n");
+      else
+        $display("*** test_rfc8349 completed with %d errors.\n", incorrect);
     end
   endtask // test_rfc8349
 
