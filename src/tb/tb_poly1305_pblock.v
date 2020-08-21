@@ -95,6 +95,9 @@ module tb_poly1305_pblock();
   // Device Under Test.
   //----------------------------------------------------------------
   poly1305_pblock dut(
+                      .clk(tb_clk),
+                      .reset_n(tb_reset_n),
+
                       .h0(tb_h0),
                       .h1(tb_h1),
                       .h2(tb_h2),
@@ -168,28 +171,28 @@ module tb_poly1305_pblock();
       $display("");
 
       $display("Internal values:");
-      $display("s0:  0x%016x  s1: 0x%016x  s2: 0x%016x",
-               dut.pblock_logic.s0, dut.pblock_logic.s1, dut.pblock_logic.s2);
-      $display("s3:  0x%016x  s4: 0x%016x",
-               dut.pblock_logic.s3, dut.pblock_logic.s4);
+      $display("s0: 0x%016x  s1: 0x%016x  s2: 0x%016x",
+               dut.s0_reg, dut.s1_reg, dut.s2_reg);
+      $display("s3: 0x%016x  s4: 0x%016x",
+               dut.s3_reg, dut.s4_reg);
       $display("");
 
 
       $display("rr0: 0x%08x  rr1: 0x%08x  rr2: 0x%08x  rr3: 0x%08x",
-               dut.pblock_logic.rr0, dut.pblock_logic.rr1,
-               dut.pblock_logic.rr2, dut.pblock_logic.rr3);
+               dut.rr0_reg, dut.rr1_reg,
+               dut.rr2_reg, dut.rr3_reg);
       $display("");
 
-      $display("x0:  0x%016x  x1:  0x%016x  x2:  0x%016x",
-               dut.pblock_logic.x0, dut.pblock_logic.x1, dut.pblock_logic.x2);
+      $display("x0:  0x%016x  x1: 0x%016x  x2: 0x%016x",
+               dut.x0_reg, dut.x1_reg, dut.x2_reg);
       $display("x3:  0x%016x  x4: 0x%016x",
-               dut.pblock_logic.x3, dut.pblock_logic.x4);
+               dut.x3_reg, dut.x4_reg);
       $display("");
 
-      $display("u0:  0x%016x  u1:  0x%016x  u2:  0x%016x",
-               dut.u0, dut.u1, dut.u2);
-      $display("u3:  0x%016x  u4: 0x%016x  u5: 0x%08x",
-               dut.u0, dut.u1, dut.u2);
+      $display("u0:  0x%016x  u1: 0x%016x u2: 0x%016x",
+               dut.u0_reg, dut.u1_reg, dut.u2_reg);
+      $display("u3:  0x%016x  u4: 0x%016x u5: 0x%08x",
+               dut.u3_reg, dut.u4_reg, dut.u5_reg);
       $display("");
 
 
@@ -199,21 +202,6 @@ module tb_poly1305_pblock();
       $display("");
     end
   endtask // dump_dut_state
-
-
-  //----------------------------------------------------------------
-  // reset_dut()
-  //
-  // Toggle reset to put the DUT into a well known state.
-  //----------------------------------------------------------------
-  task reset_dut;
-    begin
-      $display("*** Toggle reset.");
-      tb_reset_n = 0;
-      #(2 * CLK_PERIOD);
-      tb_reset_n = 1;
-    end
-  endtask // reset_dut
 
 
   //----------------------------------------------------------------
@@ -251,6 +239,21 @@ module tb_poly1305_pblock();
       tb_r3      = 32'h0;
     end
   endtask // init_sim
+
+
+  //----------------------------------------------------------------
+  // reset_dut()
+  //
+  // Toggle reset to put the DUT into a well known state.
+  //----------------------------------------------------------------
+  task reset_dut;
+    begin
+      $display("*** Toggle reset.");
+      tb_reset_n = 0;
+      #(2 * CLK_PERIOD);
+      tb_reset_n = 1;
+    end
+  endtask // reset_dut
 
 
   //----------------------------------------------------------------
@@ -304,7 +307,7 @@ module tb_poly1305_pblock();
       tb_r3 = 32'h0806d540;
 
       tb_debug = 1;
-      #(30 * CLK_PERIOD);
+      #(10 * CLK_PERIOD);
       tb_debug = 0;
 
       if (tb_h0_new != 32'h369d03a7)

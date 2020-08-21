@@ -35,6 +35,9 @@
 //======================================================================
 
 module poly1305_pblock(
+                       input wire          clk,
+                       input wire          reset_n,
+
                        input wire [31 : 0] h0,
                        input wire [31 : 0] h1,
                        input wire [31 : 0] h2,
@@ -62,22 +65,124 @@ module poly1305_pblock(
   //----------------------------------------------------------------
   // Registers (Variables)
   //----------------------------------------------------------------
-  reg [63 : 0] u0;
-  reg [63 : 0] u1;
-  reg [63 : 0] u2;
-  reg [63 : 0] u3;
-  reg [63 : 0] u4;
-  reg [63 : 0] u5;
+  reg [63 : 0] u0_reg;
+  reg [63 : 0] u0_new;
+  reg [63 : 0] u1_reg;
+  reg [63 : 0] u1_new;
+  reg [63 : 0] u2_reg;
+  reg [63 : 0] u2_new;
+  reg [63 : 0] u3_reg;
+  reg [63 : 0] u3_new;
+  reg [63 : 0] u4_reg;
+  reg [63 : 0] u4_new;
+  reg [63 : 0] u5_reg;
+  reg [63 : 0] u5_new;
+
+  reg [63 : 0] s0_reg;
+  reg [63 : 0] s0_new;
+  reg [63 : 0] s1_reg;
+  reg [63 : 0] s1_new;
+  reg [63 : 0] s2_reg;
+  reg [63 : 0] s2_new;
+  reg [63 : 0] s3_reg;
+  reg [63 : 0] s3_new;
+  reg [63 : 0] s4_reg;
+  reg [63 : 0] s4_new;
+
+  reg [31 : 0] rr0_reg;
+  reg [31 : 0] rr0_new;
+  reg [31 : 0] rr1_reg;
+  reg [31 : 0] rr1_new;
+  reg [31 : 0] rr2_reg;
+  reg [31 : 0] rr2_new;
+  reg [31 : 0] rr3_reg;
+  reg [31 : 0] rr3_new;
+
+  reg [63 : 0] x0_reg;
+  reg [63 : 0] x0_new;
+  reg [63 : 0] x1_reg;
+  reg [63 : 0] x1_new;
+  reg [63 : 0] x2_reg;
+  reg [63 : 0] x2_new;
+  reg [63 : 0] x3_reg;
+  reg [63 : 0] x3_new;
+  reg [63 : 0] x4_reg;
+  reg [63 : 0] x4_new;
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign h0_new  = u0[31 : 0];
-  assign h1_new  = u1[31 : 0];
-  assign h2_new  = u2[31 : 0];
-  assign h3_new  = u3[31 : 0];
-  assign h4_new  = u4[31 : 0];
+  assign h0_new  = u0_reg[31 : 0];
+  assign h1_new  = u1_reg[31 : 0];
+  assign h2_new  = u2_reg[31 : 0];
+  assign h3_new  = u3_reg[31 : 0];
+  assign h4_new  = u4_reg[31 : 0];
+
+
+
+  //----------------------------------------------------------------
+  // reg_update
+  //
+  // Update functionality for all registers in the core.
+  // All registers are positive edge triggered with synchronous
+  // active low reset.
+  //----------------------------------------------------------------
+  always @ (posedge clk)
+    begin : reg_update
+      if (!reset_n)
+        begin
+          s0_reg  <= 64'h0;
+          s1_reg  <= 64'h0;
+          s2_reg  <= 64'h0;
+          s3_reg  <= 64'h0;
+          s4_reg  <= 64'h0;
+
+          rr0_reg <= 32'h0;
+          rr1_reg <= 32'h0;
+          rr2_reg <= 32'h0;
+          rr3_reg <= 32'h0;
+
+          x0_reg  <= 64'h0;
+          x1_reg  <= 64'h0;
+          x2_reg  <= 64'h0;
+          x3_reg  <= 64'h0;
+          x4_reg  <= 64'h0;
+
+          u0_reg  <= 64'h0;
+          u1_reg  <= 64'h0;
+          u2_reg  <= 64'h0;
+          u3_reg  <= 64'h0;
+          u4_reg  <= 64'h0;
+          u5_reg  <= 64'h0;
+        end
+      else
+        begin
+          s0_reg  <= s0_new;
+          s1_reg  <= s1_new;
+          s2_reg  <= s2_new;
+          s3_reg  <= s3_new;
+          s4_reg  <= s4_new;
+
+          rr0_reg <= rr0_new;
+          rr1_reg <= rr1_new;
+          rr2_reg <= rr2_new;
+          rr3_reg <= rr3_new;
+
+          x0_reg  <= x0_new;
+          x1_reg  <= x1_new;
+          x2_reg  <= x2_new;
+          x3_reg  <= x3_new;
+          x4_reg  <= x4_new;
+
+          u0_reg  <= u0_new;
+          u1_reg  <= u1_new;
+          u2_reg  <= u2_new;
+          u3_reg  <= u3_new;
+          u4_reg  <= u4_new;
+          u5_reg  <= u5_new;
+        end
+    end // reg_update
 
 
   //----------------------------------------------------------------
@@ -85,63 +190,44 @@ module poly1305_pblock(
   //----------------------------------------------------------------
   always @*
     begin : pblock_logic
-      reg [63 : 0] s0;
-      reg [63 : 0] s1;
-      reg [63 : 0] s2;
-      reg [63 : 0] s3;
-      reg [63 : 0] s4;
-
-      reg [31 : 0] rr0;
-      reg [31 : 0] rr1;
-      reg [31 : 0] rr2;
-      reg [31 : 0] rr3;
-
-      reg [63 : 0] x0;
-      reg [63 : 0] x1;
-      reg [63 : 0] x2;
-      reg [63 : 0] x3;
-      reg [63 : 0] x4;
-
-
       // s = h + c, no carry propagation.
-      s0 = h0 + c0;
-      s1 = h1 + c1;
-      s2 = h2 + c2;
-      s3 = h3 + c3;
-      s4 = h4 + c4;
+      s0_new = h0 + c0;
+      s1_new = h1 + c1;
+      s2_new = h2 + c2;
+      s3_new = h3 + c3;
+      s4_new = h4 + c4;
 
 
       // Multiply r.
-      rr0 = {2'h0, r0[31 : 2]} * 32'h5;
-      rr1 = {2'h0, r1[31 : 2]} + r1;
-      rr2 = {2'h0, r2[31 : 2]} + r2;
-      rr3 = {2'h0, r3[31 : 2]} + r3;
+      rr0_new = {2'h0, r0[31 : 2]} * 32'h5;
+      rr1_new = {2'h0, r1[31 : 2]} + r1;
+      rr2_new = {2'h0, r2[31 : 2]} + r2;
+      rr3_new = {2'h0, r3[31 : 2]} + r3;
 
 
       // Big mult-add trees.
-      // To be optimized.
-      x0 = (s0 * r0)  + (s1 * rr3) + (s2 * rr2) +
-           (s3 * rr1) + (s4 * rr0);
+      x0_new = (s0_reg * r0)  + (s1_reg * rr3_reg) + (s2_reg * rr2_reg) +
+               (s3_reg * rr1_reg) + (s4_reg * rr0_reg);
 
-      x1 = (s0 * r1)  + (s1 * r0)  + (s2 * rr3) +
-           (s3 * rr2) + (s4 * rr1);
+      x1_new = (s0_reg * r1)  + (s1_reg * r0)  + (s2_reg * rr3_reg) +
+               (s3_reg * rr2_reg) + (s4_reg * rr1_reg);
 
-      x2 = (s0 * r2)  + (s1 * r1) + (s2 * r0) +
-           (s3 * rr3) + (s4 * rr2);
+      x2_new = (s0_reg * r2)  + (s1_reg * r1) + (s2_reg * r0) +
+               (s3_reg * rr3_reg) + (s4_reg * rr2_reg);
 
-      x3 = (s0 * r3) + (s1 * r2) + (s2 * r1) +
-           (s3 * r0) + (s4 * rr3);
+      x3_new = (s0_reg * r3) + (s1_reg * r2) + (s2_reg * r1) +
+               (s3_reg * r0) + (s4_reg * rr3_reg);
 
-      x4 = s4 * {32'h0, (r0 & 32'h3)};
+      x4_new = s4_reg * {32'h0, (r0 & 32'h3)};
 
 
       // partial reduction modulo 2^130 - 5
-      u5 = (x4 + {32'h0, x3[63 : 32]});
-      u0 = ({2'h0, u5[31 : 2]} * 5) + {32'H0, x0[31 : 0]};
-      u1 = u0[63 : 32] + x1[31 : 0] + x0[63 : 32];
-      u2 = u1[63 : 32] + x2[31 : 0] + x1[63 : 32];
-      u3 = u2[63 : 32] + x3[31 : 0] + x2[63 : 32];
-      u4 = u3[63 : 32] + u5 & 32'h3;
+      u5_new = (x4_reg + {32'h0, x3_reg[63 : 32]});
+      u0_new = ({2'h0, u5_reg[31 : 2]} * 5) + {32'h0, x0_reg[31 : 0]};
+      u1_new = u0_reg[63 : 32] + x1_reg[31 : 0] + x0_reg[63 : 32];
+      u2_new = u1_reg[63 : 32] + x2_reg[31 : 0] + x1_reg[63 : 32];
+      u3_new = u2_reg[63 : 32] + x3_reg[31 : 0] + x2_reg[63 : 32];
+      u4_new = u3_reg[63 : 32] + u5_reg & 32'h3;
     end // pblock_logic
 
 endmodule // poly1305_pblock
