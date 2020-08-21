@@ -38,20 +38,6 @@
 
 
 //------------------------------------------------------------------
-// print_hexdata()
-// Dump hex data
-//------------------------------------------------------------------
-void print_hexdata(uint8_t *data, uint32_t len) {
-  uint32_t num_lines = len / 8;
-
-  for (int i = 0 ; i < num_lines * 8 ; i += 8)
-    printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
-           data[i], data[i + 1], data[i + 2], data[i + 3],
-           data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
-}
-
-
-//------------------------------------------------------------------
 // check_tag()
 // Check the generated tag against an expected tag.
 // The tag is expected to be 16 bytes.
