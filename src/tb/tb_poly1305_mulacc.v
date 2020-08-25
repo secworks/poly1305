@@ -189,6 +189,26 @@ module tb_poly1305_mulacc();
 
 
   //----------------------------------------------------------------
+  // inc_tc_ctr()
+  //----------------------------------------------------------------
+  task inc_tc_ctr;
+    begin
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // inc_error_ctr
+
+
+  //----------------------------------------------------------------
+  // inc_error_ctr()
+  //----------------------------------------------------------------
+  task inc_error_ctr;
+    begin
+      error_ctr = error_ctr + 1;
+    end
+  endtask // inc_error_ctr
+
+
+  //----------------------------------------------------------------
   // init_sim()
   //
   // Initialize all counters and testbed functionality as well
@@ -256,6 +276,55 @@ module tb_poly1305_mulacc();
 
 
   //----------------------------------------------------------------
+  // tc1
+  // A very simple testcase that just checks that everything
+  // responds and that the control FSM walks the states.
+  //----------------------------------------------------------------
+  task tc1;
+    begin : tc1;
+      $display("*** TC1 started.");
+
+      tb_debug = 1;
+      inc_tc_ctr();
+
+      tb_opa0    = 32'h0;
+      tb_opb0    = 64'h0;
+      tb_opa1    = 32'h1;
+      tb_opb1    = 64'h1;
+      tb_opa2    = 32'h2;
+      tb_opb2    = 64'h2;
+      tb_opa3    = 32'h4;
+      tb_opb3    = 64'h4;
+      tb_opa4    = 32'h8;
+      tb_opb4    = 64'h8;
+
+      tb_start   = 1'h1;
+      #(CLK_PERIOD);
+      tb_start   = 1'h0;
+
+      while (!tb_done)
+        #(CLK_PERIOD);
+
+
+      #(2 * CLK_PERIOD);
+
+      if (tb_sum == 64'h55)
+        $display("*** TC1: Correct sum received.\n");
+      else
+        begin
+          $display("*** TC1: Expected sum: 0x55. Received sum: 0x%016x.\n", tb_sum);
+          inc_error_ctr();
+        end
+
+      #(CLK_PERIOD);
+      tb_debug = 0;
+
+      $display("*** TC1 completed.\n");
+    end
+  endtask // tc1
+
+
+  //----------------------------------------------------------------
   // poly1305_mulacc_test
   //----------------------------------------------------------------
   initial
@@ -267,6 +336,7 @@ module tb_poly1305_mulacc();
       reset_dut();
       dump_dut_state();
 
+      tc1();
       display_test_result();
 
       $display("");
