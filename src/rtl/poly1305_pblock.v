@@ -144,10 +144,10 @@ module poly1305_pblock(
   // Wires.
   //----------------------------------------------------------------
   reg  mulacc_start;
-  wire mulacc0_done;
-  wire mulacc1_done;
-  wire mulacc2_done;
-  wire mulacc3_done;
+  wire mulacc0_ready;
+  wire mulacc1_ready;
+  wire mulacc2_ready;
+  wire mulacc3_ready;
 
 
   //----------------------------------------------------------------
@@ -169,7 +169,7 @@ module poly1305_pblock(
                           .clk(clk),
                           .reset_n(reset_n),
                           .start(mulacc_start),
-                          .done(mulacc0_done),
+                          .ready(mulacc0_ready),
                           .opa0(r0),
                           .opb0(s0_reg),
                           .opa1(rr3_reg),
@@ -187,7 +187,7 @@ module poly1305_pblock(
                           .clk(clk),
                           .reset_n(reset_n),
                           .start(mulacc_start),
-                          .done(mulacc1_done),
+                          .ready(mulacc1_ready),
                           .opa0(r1),
                           .opb0(s0_reg),
                           .opa1(r0),
@@ -205,7 +205,7 @@ module poly1305_pblock(
                           .clk(clk),
                           .reset_n(reset_n),
                           .start(mulacc_start),
-                          .done(mulacc2_done),
+                          .ready(mulacc2_ready),
                           .opa0(r2),
                           .opb0(s0_reg),
                           .opa1(r1),
@@ -223,7 +223,7 @@ module poly1305_pblock(
                           .clk(clk),
                           .reset_n(reset_n),
                           .start(mulacc_start),
-                          .done(mulacc3_done),
+                          .ready(mulacc3_ready),
                           .opa0(r3),
                           .opb0(s0_reg),
                           .opa1(r2),
@@ -379,8 +379,8 @@ module poly1305_pblock(
 
         CTRL_DONE:
           begin
-            if ((mulacc0_done) || (mulacc1_done) ||
-                (mulacc2_done) || (mulacc3_done))
+            if ((mulacc0_ready) || (mulacc1_ready) ||
+                (mulacc2_ready) || (mulacc3_ready))
               begin
                 pblock_ctrl_new = CTRL_WAIT2;
                 pblock_ctrl_we  = 1'h1;

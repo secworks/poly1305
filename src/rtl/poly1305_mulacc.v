@@ -40,7 +40,7 @@ module poly1305_mulacc(
                        input wire           reset_n,
 
                        input wire           start,
-                       output wire          done,
+                       output wire          ready,
 
                        input wire [31 : 0]  opa0,
                        input wire [63 : 0]  opb0,
@@ -70,7 +70,6 @@ module poly1305_mulacc(
   localparam CTRL_OP3  = 3'h3;
   localparam CTRL_OP4  = 3'h4;
   localparam CTRL_SUM  = 3'h5;
-  localparam CTRL_DONE = 3'h6;
 
 
   //----------------------------------------------------------------
@@ -84,9 +83,9 @@ module poly1305_mulacc(
   reg [63 : 0] sum_new;
   reg          sum_we;
 
-  reg          done_reg;
-  reg          done_new;
-  reg          done_we;
+  reg          ready_reg;
+  reg          ready_new;
+  reg          ready_we;
 
   reg [3 : 0]  mulacc_ctrl_reg;
   reg [3 : 0]  mulacc_ctrl_new;
@@ -105,8 +104,8 @@ module poly1305_mulacc(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign sum  = sum_reg;
-  assign done = done_reg;
+  assign sum   = sum_reg;
+  assign ready = ready_reg;
 
 
   //----------------------------------------------------------------
@@ -122,7 +121,7 @@ module poly1305_mulacc(
         begin
           mul_reg         <= 64'h0;
           sum_reg         <= 64'h0;
-          done_reg        <= 1'h0;
+          ready_reg       <= 1'h0;
           mulacc_ctrl_reg <= CTRL_IDLE;
         end
       else
@@ -133,8 +132,8 @@ module poly1305_mulacc(
           if (sum_we)
             sum_reg <= sum_new;
 
-          if (done_we)
-            done_reg <= done_new;
+          if (ready_we)
+            ready_reg <= ready_new;
 
           if (mulacc_ctrl_we)
             mulacc_ctrl_reg <= mulacc_ctrl_new;
@@ -224,8 +223,8 @@ module poly1305_mulacc(
       update_mul      = 1'h0;
       clear_sum       = 1'h0;
       update_sum      = 1'h0;
-      done_new        = 1'h0;
-      done_we         = 1'h0;
+      ready_new       = 1'h0;
+      ready_we        = 1'h0;
       mulacc_ctrl_new = CTRL_IDLE;
       mulacc_ctrl_we  = 1'h0;
 
@@ -234,8 +233,8 @@ module poly1305_mulacc(
           begin
             if (start)
               begin
-                done_new        = 1'h0;
-                done_we         = 1'h1;
+                ready_new       = 1'h0;
+                ready_we        = 1'h1;
                 mulop_select    = 3'h0;
                 update_mul      = 1'h1;
                 clear_sum       = 1'h1;
@@ -283,14 +282,8 @@ module poly1305_mulacc(
         CTRL_SUM:
           begin
             update_sum      = 1'h1;
-            mulacc_ctrl_new = CTRL_DONE;
-            mulacc_ctrl_we  = 1'h1;
-          end
-
-        CTRL_DONE:
-          begin
-            done_new        = 1'h1;
-            done_we         = 1'h1;
+            ready_new       = 1'h1;
+            ready_we        = 1'h1;
             mulacc_ctrl_new = CTRL_IDLE;
             mulacc_ctrl_we  = 1'h1;
           end

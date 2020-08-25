@@ -65,7 +65,7 @@ module tb_poly1305_mulacc();
   reg           tb_reset_n;
 
   reg           tb_start;
-  wire          tb_done;
+  wire          tb_ready;
 
   reg [31 : 0]  tb_opa0;
   reg [63 : 0]  tb_opb0;
@@ -93,7 +93,7 @@ module tb_poly1305_mulacc();
                       .reset_n(tb_reset_n),
 
                       .start(tb_start),
-                      .done(tb_done),
+                      .ready(tb_ready),
 
                       .opa0(tb_opa0),
                       .opb0(tb_opb0),
@@ -153,7 +153,7 @@ module tb_poly1305_mulacc();
       $display("State of DUT");
       $display("------------");
       $display("cycle: %08d", cycle_ctr);
-      $display("start: 0x%01x, done: 0x%01x", tb_start, tb_done);
+      $display("start: 0x%01x, ready: 0x%01x", tb_start, tb_ready);
       $display("");
 
       $display("Inputs:");
@@ -302,7 +302,7 @@ module tb_poly1305_mulacc();
       #(CLK_PERIOD);
       tb_start   = 1'h0;
 
-      while (!tb_done)
+      while (!tb_ready)
         #(CLK_PERIOD);
 
 
@@ -355,7 +355,7 @@ module tb_poly1305_mulacc();
       #(CLK_PERIOD);
       tb_start   = 1'h0;
 
-      while (!tb_done)
+      while (!tb_ready)
         #(CLK_PERIOD);
 
 
@@ -408,7 +408,7 @@ module tb_poly1305_mulacc();
       #(CLK_PERIOD);
       tb_start   = 1'h0;
 
-      while (!tb_done)
+      while (!tb_ready)
         #(CLK_PERIOD);
 
 
@@ -462,7 +462,7 @@ module tb_poly1305_mulacc();
       #(CLK_PERIOD);
       tb_start   = 1'h0;
 
-      while (!tb_done)
+      while (!tb_ready)
         #(CLK_PERIOD);
 
 
@@ -515,7 +515,7 @@ module tb_poly1305_mulacc();
       #(CLK_PERIOD);
       tb_start   = 1'h0;
 
-      while (!tb_done)
+      while (!tb_ready)
         #(CLK_PERIOD);
 
 
