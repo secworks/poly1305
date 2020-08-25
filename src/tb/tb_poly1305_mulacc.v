@@ -325,6 +325,59 @@ module tb_poly1305_mulacc();
 
 
   //----------------------------------------------------------------
+  // tc2_rfc_x0
+  // Testcase that uses inputs from the RFC testcase.
+  // This corresponds to calculation of x0.
+  //----------------------------------------------------------------
+  task tc2_rfc_x0;
+    begin : tc1;
+      $display("*** TC_rfc_x0 started.");
+
+      tb_debug = 1;
+      inc_tc_ctr();
+
+      tb_opa0    = 32'h08bed685;
+      tb_opb0    = 64'h00000000344ca153;
+
+      tb_opa1    = 32'h0a088a90;
+      tb_opb1    = 64'h00000000cccfb4ea;
+
+      tb_opa2    = 32'h11e6d59b;
+      tb_opb2    = 64'h00000000b0337fa7;
+
+      tb_opa3    = 32'h0448aaa9;
+      tb_opb3    = 64'h00000000d8adaf23;
+
+      tb_opa4    = 32'h0aee8c25;
+      tb_opb4    = 64'h0000000000000002;
+
+      tb_start   = 1'h1;
+      #(CLK_PERIOD);
+      tb_start   = 1'h0;
+
+      while (!tb_done)
+        #(CLK_PERIOD);
+
+
+      #(2 * CLK_PERIOD);
+
+      if (tb_sum == 64'h19c2d8f41a0a4b41)
+        $display("*** TC2_rfc_x0: Correct sum received.\n");
+      else
+        begin
+          $display("*** TC2_rfc_x0: Expected sum: 0x19c2d8f41a0a4b41. Received sum: 0x%016x.\n", tb_sum);
+          inc_error_ctr();
+        end
+
+      #(CLK_PERIOD);
+      tb_debug = 0;
+
+      $display("*** TC2_rfc_x0 completed.");
+    end
+  endtask // tc2_rfc_x0
+
+
+  //----------------------------------------------------------------
   // poly1305_mulacc_test
   //----------------------------------------------------------------
   initial
@@ -337,6 +390,7 @@ module tb_poly1305_mulacc();
       dump_dut_state();
 
       tc1();
+      tc2_rfc_x0();
       display_test_result();
 
       $display("");
