@@ -36,6 +36,10 @@
 #
 #===================================================================
 
+# Source files.
+MULACC_SRC =../src/rtl/poly1305_mulacc.v
+TB_MULACC_SRC =../src/tb/tb_poly1305_mulacc.v
+
 PBLOCK_SRC =../src/rtl/poly1305_pblock.v
 TB_PBLOCK_SRC =../src/tb/tb_poly1305_pblock.v
 
@@ -49,6 +53,7 @@ TOP_SRC =../src/rtl/poly1305.v $(CORE_SRC)
 TB_TOP_SRC =../src/tb/tb_poly1305.v
 
 
+# Tools and flags.
 CC=iverilog
 CC_FLAGS= -Wall
 
@@ -56,7 +61,8 @@ LINT=verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 
-all: top.sim core.sim pblock.sim  final.sim
+# Targets abd build rules.
+all: top.sim core.sim pblock.sim final.sim mulacc.sim
 
 
 top.sim: $(TB_TOP_SRC) $(TOP_SRC)
@@ -75,6 +81,10 @@ final.sim: $(TB_FINAL_SRC) $(FINAL_SRC)
 	$(CC) $(CC_FLAGS) -o final.sim $(TB_FINAL_SRC) $(FINAL_SRC)
 
 
+mulacc.sim: $(TB_MULACC_SRC) $(MULACC_SRC)
+	$(CC) $(CC_FLAGS) -o mulacc.sim $(TB_MULACC_SRC) $(MULACC_SRC)
+
+
 sim-top: top.sim
 	./top.sim
 
@@ -91,6 +101,10 @@ sim-final: final.sim
 	./final.sim
 
 
+sim-mulacc: mulaccsim
+	./mulaccsim
+
+
 lint:  $(TOP_SRC)
 	$(LINT) $(LINT_FLAGS) $(TOP_SRC)
 
@@ -101,6 +115,7 @@ clean:
 	rm -f core.sim
 	rm -f pblock.sim
 	rm -f final.sim
+	rm -f mulacc.sim
 
 
 help:
@@ -111,10 +126,12 @@ help:
 	@echo "core.sim:   Build Poly1305 core simulation target."
 	@echo "pblock.sim: Build Poly1305 poly block simulation target."
 	@echo "final.sim:  Build Poly1305 final logic simulation target."
+	@echo "mulacc.sim: Build Poly1305 mulacc logic simulation target."
 	@echo "sim-top:    Run Poly1305 top level simulation."
 	@echo "sim-core:   Run Poly1305 core simulation."
 	@echo "sim-pblock: Run Poly1305 poly block simulation."
 	@echo "sim-final:  Run Poly1305 final logic simulation."
+	@echo "sim-mulacc: Run Poly1305 mulacc logic simulation."
 	@echo "lint:       Lint the RTL source."
 	@echo "clean:      Remove build targets."
 

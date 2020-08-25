@@ -2,11 +2,10 @@
 //
 // poly1305_mulacc.v
 // -----------------
-// multiply-accumulate core used to implement the 128 bit
-// multiplications in Poly1305.
+// Multiply-accumulate with five sets of operands.
 //
 //
-// Copyright (c) 2017, Secworks Sweden AB
+// Copyright (c) 2020, Assured AB
 // Joachim Strömbergson
 //
 // Redistribution and use in source and binary forms, with or
@@ -40,24 +39,74 @@ module poly1305_mulacc(
                        input wire           clk,
                        input wire           reset_n,
 
-                       input wire           init,
-                       input wire           update,
-                       input wire  [63 : 0] opa,
-                       input wire  [31 : 0] opb,
-                       output wire [63 : 0] res
+                       input wire           start,
+                       output wire          done,
+
+                       input wire [31 : 0]  opa0,
+                       input wire [63 : 0]  opb0,
+
+                       input wire [31 : 0]  opa1,
+                       input wire [63 : 0]  opb1,
+
+                       input wire [31 : 0]  opa2,
+                       input wire [63 : 0]  opb2,
+
+                       input wire [31 : 0]  opa3,
+                       input wire [63 : 0]  opb3,
+
+                       input wire [31 : 0]  opa4,
+                       input wire [63 : 0]  opb4,
+
+                       output wire [63 : 0] sum
                       );
+
+
+  //----------------------------------------------------------------
+  // Parameters and symbolic values.
+  //----------------------------------------------------------------
+  localparam CTRL_IDLE = 3'h0;
+  localparam CTRL_OP1  = 3'h1;
+  localparam CTRL_OP2  = 3'h2;
+  localparam CTRL_OP3  = 3'h3;
+  localparam CTRL_OP4  = 3'h4;
+  localparam CTRL_SUM  = 3'h5;
+  localparam CTRL_DONE = 3'h6;
+
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [63 : 0] mulacc_res_reg;
-  reg [63 : 0] mulacc_res_new;
+  reg [63 : 0] mul_reg;
+  reg [63 : 0] mul_new;
+  reg          mul_we;
+
+  reg [63 : 0] sum_reg;
+  reg [63 : 0] sum_new;
+  reg          sum_we;
+
+  reg          done_reg;
+  reg          done_new;
+  reg          done_we;
+
+  reg [3 : 0]  mulacc_ctrl_reg;
+  reg [3 : 0]  mulacc_ctrl_new;
+  reg          mulacc_ctrl_we;
+
+
+  //----------------------------------------------------------------
+  // wires
+  //----------------------------------------------------------------
+  reg [2 : 0]  mulop_select;
+  reg          update_mul;
+  reg          clear_sum;
+  reg          update_sum;
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign res = mulacc_res_reg;
+  assign sum  = sum_reg;
+  assign done = done_reg;
 
 
   //----------------------------------------------------------------
@@ -71,32 +120,185 @@ module poly1305_mulacc(
     begin : reg_update
       if (!reset_n)
         begin
-          mulacc_res_reg <= 64'h0;
+          mul_reg         <= 64'h0;
+          sum_reg         <= 64'h0;
+          done_reg        <= 1'h0;
+          mulacc_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
-          if (update)
-            mulacc_res_reg <= mulacc_res_new;
+          if (mul_we)
+            mul_reg <= mul_new;
+
+          if (sum_we)
+            sum_reg <= sum_new;
+
+          if (done_we)
+            done_reg <= done_new;
+
+          if (mulacc_ctrl_we)
+            mulacc_ctrl_reg <= mulacc_ctrl_new;
         end
     end // reg_update
 
 
   //----------------------------------------------------------------
-  // mac_logic
+  // mulacc_logic
   //----------------------------------------------------------------
   always @*
-    begin : mac_logic
-      reg [63 : 0] mul_res;
-      reg [63 : 0] mux_addop;
+    begin : mulacc_logic
+      reg [31 : 0] mul_opa;
+      reg [63 : 0] mul_opb;
 
-      mul_res = opa * opb;
+      mul_opa = 32'h0;
+      mul_opb = 64'h0;
+      mul_new = 64'h0;
+      mul_we  = 1'h0;
+      sum_new = 64'h0;
+      sum_we  = 1'h0;
 
-      if (init)
-        mux_addop = 64'h0;
-      else
-        mux_addop = mulacc_res_reg;
 
-      mulacc_res_new = mul_res + mux_addop;
+      case (mulop_select)
+        0:
+          begin
+            mul_opa = opa0;
+            mul_opb = opb0;
+          end
+
+        1:
+          begin
+            mul_opa = opa1;
+            mul_opb = opb1;
+          end
+
+        2:
+          begin
+            mul_opa = opa2;
+            mul_opb = opb2;
+          end
+
+        3:
+          begin
+            mul_opa = opa3;
+            mul_opb = opb3;
+          end
+
+        4:
+          begin
+            mul_opa = opa4;
+            mul_opb = opb4;
+          end
+
+        default:
+          begin
+          end
+      endcase // case (mulop_select)
+
+
+      if (update_mul)
+        begin
+          mul_new = mul_opa * mul_opb;
+          mul_we          = 1'h1;
+        end
+
+      if (clear_sum)
+        begin
+          sum_new = 64'h0;
+          sum_we  = 1;
+        end
+
+      if (update_sum)
+        begin
+          sum_new = sum_reg + mul_reg;
+          sum_we  = 1;
+        end
+    end
+
+
+  //----------------------------------------------------------------
+  // mulacc_ctrl
+  //----------------------------------------------------------------
+  always @*
+    begin : mulacc_ctrl
+      mulop_select    = 3'h0;
+      update_mul      = 1'h0;
+      clear_sum       = 1'h0;
+      update_sum      = 1'h0;
+      done_new        = 1'h0;
+      done_we         = 1'h0;
+      mulacc_ctrl_new = CTRL_IDLE;
+      mulacc_ctrl_we  = 1'h0;
+
+      case (mulacc_ctrl_reg)
+        CTRL_IDLE:
+          begin
+            if (start)
+              begin
+                done_new        = 1'h0;
+                done_we         = 1'h1;
+                mulop_select    = 3'h0;
+                update_mul      = 1'h1;
+                clear_sum       = 1'h1;
+                mulacc_ctrl_new = CTRL_OP1;
+                mulacc_ctrl_we  = 1'h1;
+              end
+          end
+
+        CTRL_OP1:
+          begin
+            mulop_select    = 3'h1;
+            update_mul      = 1'h1;
+            update_sum      = 1'h1;
+            mulacc_ctrl_new = CTRL_OP2;
+            mulacc_ctrl_we  = 1'h1;
+          end
+
+        CTRL_OP2:
+          begin
+            mulop_select    = 3'h2;
+            update_mul      = 1'h1;
+            update_sum      = 1'h1;
+            mulacc_ctrl_new = CTRL_OP3;
+            mulacc_ctrl_we  = 1'h1;
+          end
+
+        CTRL_OP3:
+          begin
+            mulop_select    = 3'h3;
+            update_mul      = 1'h1;
+            update_sum      = 1'h1;
+            mulacc_ctrl_new = CTRL_OP4;
+            mulacc_ctrl_we  = 1'h1;
+          end
+
+        CTRL_OP4:
+          begin
+            mulop_select    = 3'h4;
+            update_mul      = 1'h1;
+            update_sum      = 1'h1;
+            mulacc_ctrl_new = CTRL_SUM;
+            mulacc_ctrl_we  = 1'h1;
+          end
+
+        CTRL_SUM:
+          begin
+            update_sum      = 1'h1;
+            mulacc_ctrl_new = CTRL_DONE;
+            mulacc_ctrl_we  = 1'h1;
+          end
+
+        CTRL_DONE:
+          begin
+            done_new        = 1'h1;
+            done_we         = 1'h1;
+            mulacc_ctrl_new = CTRL_IDLE;
+            mulacc_ctrl_we  = 1'h1;
+          end
+
+        default:
+          begin
+          end
+      endcase // case (mulacc_ctrl_reg)
     end
 
 endmodule // poly1305_mulacc
