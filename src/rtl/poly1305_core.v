@@ -106,7 +106,7 @@ module poly1305_core(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg  pblock_next;
+  reg  pblock_start;
   wire pblock_ready;
 
   reg state_init;
@@ -138,6 +138,9 @@ module poly1305_core(
   poly1305_pblock pblock_inst(
                               .clk(clk),
                               .reset_n(reset_n),
+
+                              .start(pblock_start),
+                              .ready(pblock_ready),
 
                               .h0(h_reg[0]),
                               .h1(h_reg[1]),

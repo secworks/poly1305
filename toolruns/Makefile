@@ -40,7 +40,7 @@
 MULACC_SRC =../src/rtl/poly1305_mulacc.v
 TB_MULACC_SRC =../src/tb/tb_poly1305_mulacc.v
 
-PBLOCK_SRC =../src/rtl/poly1305_pblock.v
+PBLOCK_SRC =../src/rtl/poly1305_pblock.v $(MULACC_SRC)
 TB_PBLOCK_SRC =../src/tb/tb_poly1305_pblock.v
 
 FINAL_SRC =../src/rtl/poly1305_final.v

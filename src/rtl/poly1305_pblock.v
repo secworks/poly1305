@@ -38,6 +38,9 @@ module poly1305_pblock(
                        input wire          clk,
                        input wire          reset_n,
 
+                       input wire          start,
+                       output wire         ready,
+
                        input wire [31 : 0] h0,
                        input wire [31 : 0] h1,
                        input wire [31 : 0] h2,
@@ -61,6 +64,25 @@ module poly1305_pblock(
                        output wire [31 : 0] h3_new,
                        output wire [31 : 0] h4_new
                       );
+
+
+  //----------------------------------------------------------------
+  // Parameters and symbolic values.
+  //----------------------------------------------------------------
+  localparam CTRL_IDLE  = 4'h0;
+  localparam CTRL_WAIT0 = 4'h1;
+  localparam CTRL_WAIT1 = 4'h2;
+  localparam CTRL_START = 4'h3;
+  localparam CTRL_DONE  = 4'h4;
+  localparam CTRL_WAIT2 = 4'h5;
+  localparam CTRL_WAIT3 = 4'h6;
+  localparam CTRL_WAIT4 = 4'h7;
+  localparam CTRL_WAIT5 = 4'h8;
+  localparam CTRL_WAIT6 = 4'h9;
+  localparam CTRL_WAIT7 = 4'ha;
+  localparam CTRL_WAIT8 = 4'hb;
+  localparam CTRL_READY = 4'hc;
+
 
   //----------------------------------------------------------------
   // Registers (Variables)
@@ -98,27 +120,122 @@ module poly1305_pblock(
   reg [31 : 0] rr3_reg;
   reg [31 : 0] rr3_new;
 
-  reg [63 : 0] x0_reg;
-  reg [63 : 0] x0_new;
-  reg [63 : 0] x1_reg;
-  reg [63 : 0] x1_new;
-  reg [63 : 0] x2_reg;
-  reg [63 : 0] x2_new;
-  reg [63 : 0] x3_reg;
-  reg [63 : 0] x3_new;
-  reg [63 : 0] x4_reg;
-  reg [63 : 0] x4_new;
+  reg [63 : 0]  x0_reg;
+  wire [63 : 0] x0_new;
+  reg [63 : 0]  x1_reg;
+  wire [63 : 0] x1_new;
+  reg [63 : 0]  x2_reg;
+  wire [63 : 0] x2_new;
+  reg [63 : 0]  x3_reg;
+  wire [63 : 0] x3_new;
+  reg [63 : 0]  x4_reg;
+  reg [63 : 0]  x4_new;
+
+  reg         ready_reg;
+  reg         ready_new;
+  reg         ready_we;
+
+  reg [2 : 0] pblock_ctrl_reg;
+  reg [2 : 0] pblock_ctrl_new;
+  reg         pblock_ctrl_we;
+
+
+  //----------------------------------------------------------------
+  // Wires.
+  //----------------------------------------------------------------
+  reg  mulacc_start;
+  wire mulacc0_done;
+  wire mulacc1_done;
+  wire mulacc2_done;
+  wire mulacc3_done;
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign ready   = ready_reg;
+
   assign h0_new  = u0_reg[31 : 0];
   assign h1_new  = u1_reg[31 : 0];
   assign h2_new  = u2_reg[31 : 0];
   assign h3_new  = u3_reg[31 : 0];
   assign h4_new  = u4_reg[31 : 0];
 
+
+  //----------------------------------------------------------------
+  // mulacc instances.
+  //----------------------------------------------------------------
+  poly1305_mulacc mulacc0(
+                          .clk(clk),
+                          .reset_n(reset_n),
+                          .start(mulacc_start),
+                          .done(mulacc0_done),
+                          .opa0(r0),
+                          .opb0(s0_reg),
+                          .opa1(rr3_reg),
+                          .opb1(s1_reg),
+                          .opa2(rr2_reg),
+                          .opb2(s2_reg),
+                          .opa3(rr1_reg),
+                          .opb3(s3_reg),
+                          .opa4(rr0_reg),
+                          .opb4(s4_reg),
+                          .sum(x0_new)
+                          );
+
+  poly1305_mulacc mulacc1(
+                          .clk(clk),
+                          .reset_n(reset_n),
+                          .start(mulacc_start),
+                          .done(mulacc1_done),
+                          .opa0(r1),
+                          .opb0(s0_reg),
+                          .opa1(r0),
+                          .opb1(s1_reg),
+                          .opa2(rr3_reg),
+                          .opb2(s2_reg),
+                          .opa3(rr2_reg),
+                          .opb3(s3_reg),
+                          .opa4(rr1_reg),
+                          .opb4(s4_reg),
+                          .sum(x1_new)
+                          );
+
+  poly1305_mulacc mulacc2(
+                          .clk(clk),
+                          .reset_n(reset_n),
+                          .start(mulacc_start),
+                          .done(mulacc2_done),
+                          .opa0(r2),
+                          .opb0(s0_reg),
+                          .opa1(r1),
+                          .opb1(s1_reg),
+                          .opa2(r0),
+                          .opb2(s2_reg),
+                          .opa3(rr3_reg),
+                          .opb3(s3_reg),
+                          .opa4(rr2_reg),
+                          .opb4(s4_reg),
+                          .sum(x2_new)
+                          );
+
+  poly1305_mulacc mulacc3(
+                          .clk(clk),
+                          .reset_n(reset_n),
+                          .start(mulacc_start),
+                          .done(mulacc3_done),
+                          .opa0(r3),
+                          .opb0(s0_reg),
+                          .opa1(r2),
+                          .opb1(s1_reg),
+                          .opa2(r1),
+                          .opb2(s2_reg),
+                          .opa3(r0),
+                          .opb3(s3_reg),
+                          .opa4(rr3_reg),
+                          .opb4(s4_reg),
+                          .sum(x3_new)
+                          );
 
 
   //----------------------------------------------------------------
@@ -132,29 +249,28 @@ module poly1305_pblock(
     begin : reg_update
       if (!reset_n)
         begin
-          s0_reg  <= 64'h0;
-          s1_reg  <= 64'h0;
-          s2_reg  <= 64'h0;
-          s3_reg  <= 64'h0;
-          s4_reg  <= 64'h0;
-
-          rr0_reg <= 32'h0;
-          rr1_reg <= 32'h0;
-          rr2_reg <= 32'h0;
-          rr3_reg <= 32'h0;
-
-          x0_reg  <= 64'h0;
-          x1_reg  <= 64'h0;
-          x2_reg  <= 64'h0;
-          x3_reg  <= 64'h0;
-          x4_reg  <= 64'h0;
-
-          u0_reg  <= 64'h0;
-          u1_reg  <= 64'h0;
-          u2_reg  <= 64'h0;
-          u3_reg  <= 64'h0;
-          u4_reg  <= 64'h0;
-          u5_reg  <= 64'h0;
+          s0_reg          <= 64'h0;
+          s1_reg          <= 64'h0;
+          s2_reg          <= 64'h0;
+          s3_reg          <= 64'h0;
+          s4_reg          <= 64'h0;
+          rr0_reg         <= 32'h0;
+          rr1_reg         <= 32'h0;
+          rr2_reg         <= 32'h0;
+          rr3_reg         <= 32'h0;
+          x0_reg          <= 64'h0;
+          x1_reg          <= 64'h0;
+          x2_reg          <= 64'h0;
+          x3_reg          <= 64'h0;
+          x4_reg          <= 64'h0;
+          u0_reg          <= 64'h0;
+          u1_reg          <= 64'h0;
+          u2_reg          <= 64'h0;
+          u3_reg          <= 64'h0;
+          u4_reg          <= 64'h0;
+          u5_reg          <= 64'h0;
+          ready_reg       <= 1'h0;
+          pblock_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
@@ -205,19 +321,7 @@ module poly1305_pblock(
       rr3_new = {2'h0, r3[31 : 2]} + r3;
 
 
-      // Big mult-add trees.
-      x0_new = (s0_reg * r0)  + (s1_reg * rr3_reg) + (s2_reg * rr2_reg) +
-               (s3_reg * rr1_reg) + (s4_reg * rr0_reg);
-
-      x1_new = (s0_reg * r1)  + (s1_reg * r0)  + (s2_reg * rr3_reg) +
-               (s3_reg * rr2_reg) + (s4_reg * rr1_reg);
-
-      x2_new = (s0_reg * r2)  + (s1_reg * r1) + (s2_reg * r0) +
-               (s3_reg * rr3_reg) + (s4_reg * rr2_reg);
-
-      x3_new = (s0_reg * r3) + (s1_reg * r2) + (s2_reg * r1) +
-               (s3_reg * r0) + (s4_reg * rr3_reg);
-
+      // x0..x3 are calculateds by the mulacc modules.
       x4_new = s4_reg * {32'h0, (r0 & 32'h3)};
 
 
@@ -229,6 +333,115 @@ module poly1305_pblock(
       u3_new = u2_reg[63 : 32] + x3_reg[31 : 0] + x2_reg[63 : 32];
       u4_new = u3_reg[63 : 32] + u5_reg & 32'h3;
     end // pblock_logic
+
+
+  //----------------------------------------------------------------
+  // pblock_ctrl
+  //----------------------------------------------------------------
+  always @*
+    begin : pblock_ctrl
+      ready_new       = 1'h1;
+      ready_we        = 1'h0;
+      mulacc_start    = 1'h0;
+      pblock_ctrl_new = CTRL_IDLE;
+      pblock_ctrl_we  = 1'h0;
+
+      case (pblock_ctrl_reg)
+        CTRL_IDLE:
+          begin
+            if (start)
+              begin
+                ready_new       = 1'h0;
+                ready_we        = 1'h1;
+                pblock_ctrl_new = CTRL_WAIT0;
+                pblock_ctrl_we  = 1'h1;
+              end
+          end
+
+        CTRL_WAIT0:
+          begin
+            pblock_ctrl_new = CTRL_WAIT1;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_WAIT1:
+          begin
+            pblock_ctrl_new = CTRL_START;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_START:
+          begin
+            mulacc_start    = 1'h1;
+            pblock_ctrl_new = CTRL_DONE;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_DONE:
+          begin
+            if ((mulacc0_done) || (mulacc1_done) ||
+                (mulacc2_done) || (mulacc3_done))
+              begin
+                pblock_ctrl_new = CTRL_WAIT2;
+                pblock_ctrl_we  = 1'h1;
+              end
+          end
+
+        CTRL_WAIT2:
+          begin
+            pblock_ctrl_new = CTRL_WAIT3;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_WAIT3:
+          begin
+            pblock_ctrl_new = CTRL_WAIT4;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_WAIT4:
+          begin
+            pblock_ctrl_new = CTRL_WAIT5;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_WAIT5:
+          begin
+            pblock_ctrl_new = CTRL_WAIT6;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_WAIT6:
+          begin
+            pblock_ctrl_new = CTRL_WAIT7;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_WAIT7:
+          begin
+            pblock_ctrl_new = CTRL_WAIT8;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_WAIT8:
+          begin
+            pblock_ctrl_new = CTRL_READY;
+            pblock_ctrl_we  = 1'h1;
+          end
+
+        CTRL_READY:
+          begin
+            ready_new        = 1'h1;
+            ready_we         = 1'h1;
+            pblock_ctrl_new  = CTRL_IDLE;
+            pblock_ctrl_we   = 1'h1;
+          end
+
+        default:
+          begin
+          end
+      endcase // case (pblock_ctrl_reg)
+    end
 
 endmodule // poly1305_pblock
 

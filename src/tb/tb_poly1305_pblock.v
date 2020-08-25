@@ -64,7 +64,7 @@ module tb_poly1305_pblock();
   reg           tb_clk;
   reg           tb_reset_n;
 
-  reg           tb_next;
+  reg           tb_start;
   wire          tb_ready;
 
   reg [31 : 0]  tb_h0;
@@ -97,6 +97,9 @@ module tb_poly1305_pblock();
   poly1305_pblock dut(
                       .clk(tb_clk),
                       .reset_n(tb_reset_n),
+
+                      .start(tb_start),
+                      .ready(tb_ready),
 
                       .h0(tb_h0),
                       .h1(tb_h1),
@@ -176,7 +179,6 @@ module tb_poly1305_pblock();
       $display("s3: 0x%016x  s4: 0x%016x",
                dut.s3_reg, dut.s4_reg);
       $display("");
-
 
       $display("rr0: 0x%08x  rr1: 0x%08x  rr2: 0x%08x  rr3: 0x%08x",
                dut.rr0_reg, dut.rr1_reg,
@@ -307,8 +309,13 @@ module tb_poly1305_pblock();
       tb_r3 = 32'h0806d540;
 
       tb_debug = 1;
-      #(10 * CLK_PERIOD);
-      tb_debug = 0;
+
+      tb_start = 1;
+      #(CLK_PERIOD);
+      tb_start = 0;
+
+      while(!tb_ready)
+        #(CLK_PERIOD);
 
       if (tb_h0_new != 32'h369d03a7)
         begin
@@ -339,6 +346,8 @@ module tb_poly1305_pblock();
           $display("Error in h4. Expected: 0x00000002. Got: 0x%08x\n", tb_h4_new);
           incorrect = incorrect + 1;
         end
+
+      tb_debug = 0;
 
       if (!incorrect)
         $display("*** test_rfc8349 successfully completed.\n");
