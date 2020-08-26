@@ -558,7 +558,7 @@ module tb_poly1305_mulacc();
       display_test_result();
 
       $display("");
-      $display("*** Poly1305 mulacc simulation done.\n");
+      $display("*** Poly1305 mulacc simulation completed.\n");
       $finish;
     end // poly1305_mulacc_test
 endmodule // tb_poly1305_mulacc
