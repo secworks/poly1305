@@ -135,8 +135,8 @@ module poly1305_pblock(
   reg         ready_new;
   reg         ready_we;
 
-  reg [2 : 0] pblock_ctrl_reg;
-  reg [2 : 0] pblock_ctrl_new;
+  reg [3 : 0] pblock_ctrl_reg;
+  reg [3 : 0] pblock_ctrl_new;
   reg         pblock_ctrl_we;
 
 
@@ -297,6 +297,12 @@ module poly1305_pblock(
           u3_reg  <= u3_new;
           u4_reg  <= u4_new;
           u5_reg  <= u5_new;
+
+          if (pblock_ctrl_we)
+            pblock_ctrl_reg <= pblock_ctrl_new;
+
+          if (ready_we)
+            ready_reg <= ready_new;
         end
     end // reg_update
 

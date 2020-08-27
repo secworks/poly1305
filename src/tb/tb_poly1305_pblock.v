@@ -46,6 +46,7 @@ module tb_poly1305_pblock();
   //----------------------------------------------------------------
   parameter DEBUG     = 0;
   parameter DUMP_WAIT = 0;
+  parameter TIMEOUT   = 100000;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
@@ -146,8 +147,15 @@ module tb_poly1305_pblock();
   //----------------------------------------------------------------
   always
     begin : sys_monitor
-      cycle_ctr = cycle_ctr + 1;
       #(CLK_PERIOD);
+
+      cycle_ctr = cycle_ctr + 1;
+      if (cycle_ctr ==  TIMEOUT)
+        begin
+          $display("*** Error: Timeout at cycle %08d reached! ***", TIMEOUT);
+          $finish;
+        end
+
       if (tb_debug)
         begin
           dump_dut_state();
@@ -162,9 +170,10 @@ module tb_poly1305_pblock();
   //----------------------------------------------------------------
   task dump_dut_state;
     begin
-      $display("State of DUT");
-      $display("------------");
+      $display("State of DUT at cycle %08d", cycle_ctr);
+      $display("------------------------------");
       $display("Inputs:");
+      $display("start: 0x%01x  ready: 0x%01x", dut.start, dut.ready);
       $display("h0: 0x%08x  h1: 0x%08x  h2: 0x%08x  h3: 0x%08x  h4: 0x%08x",
                dut.h0, dut.h1, dut.h2, dut.h3, dut.h4);
       $display("c0: 0x%08x  c1: 0x%08x  c2: 0x%08x  c3: 0x%08x  c4: 0x%08x",
@@ -174,6 +183,11 @@ module tb_poly1305_pblock();
       $display("");
 
       $display("Internal values:");
+      $display("ctrl: 0x%01x", dut.pblock_ctrl_reg);
+      $display("mulacc_start: 0x%01x  mulacc0_ready: ",
+               dut.mulacc_start, dut.mulacc0_ready);
+      $display("");
+
       $display("s0: 0x%016x  s1: 0x%016x  s2: 0x%016x",
                dut.s0_reg, dut.s1_reg, dut.s2_reg);
       $display("s3: 0x%016x  s4: 0x%016x",
@@ -311,7 +325,7 @@ module tb_poly1305_pblock();
       tb_debug = 1;
 
       tb_start = 1;
-      #(CLK_PERIOD);
+      #(2 * CLK_PERIOD);
       tb_start = 0;
 
       while(!tb_ready)
