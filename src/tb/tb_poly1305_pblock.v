@@ -46,7 +46,7 @@ module tb_poly1305_pblock();
   //----------------------------------------------------------------
   parameter DEBUG     = 0;
   parameter DUMP_WAIT = 0;
-  parameter TIMEOUT   = 100000;
+  parameter TIMEOUT   = 100;
 
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
@@ -186,6 +186,8 @@ module tb_poly1305_pblock();
       $display("ctrl: 0x%01x", dut.pblock_ctrl_reg);
       $display("mulacc_start: 0x%01x  mulacc0_ready: ",
                dut.mulacc_start, dut.mulacc0_ready);
+      $display("cycle_ctr: 0x%01x  ctr_rst: 0x%01x  ctr_inc: 0x%01x",
+               dut.cycle_ctr_reg, dut.cycle_ctr_rst, dut.cycle_ctr_inc);
       $display("");
 
       $display("s0: 0x%016x  s1: 0x%016x  s2: 0x%016x",
@@ -200,9 +202,9 @@ module tb_poly1305_pblock();
       $display("");
 
       $display("x0:  0x%016x  x1: 0x%016x  x2: 0x%016x",
-               dut.x0_reg, dut.x1_reg, dut.x2_reg);
+               dut.x0_new, dut.x1_new, dut.x2_new);
       $display("x3:  0x%016x  x4: 0x%016x",
-               dut.x3_reg, dut.x4_reg);
+               dut.x3_new, dut.x4_reg);
       $display("");
 
       $display("u0:  0x%016x  u1: 0x%016x u2: 0x%016x",

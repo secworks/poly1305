@@ -69,19 +69,13 @@ module poly1305_pblock(
   //----------------------------------------------------------------
   // Parameters and symbolic values.
   //----------------------------------------------------------------
-  localparam CTRL_IDLE  = 4'h0;
-  localparam CTRL_WAIT0 = 4'h1;
-  localparam CTRL_WAIT1 = 4'h2;
-  localparam CTRL_START = 4'h3;
-  localparam CTRL_DONE  = 4'h4;
-  localparam CTRL_WAIT2 = 4'h5;
-  localparam CTRL_WAIT3 = 4'h6;
-  localparam CTRL_WAIT4 = 4'h7;
-  localparam CTRL_WAIT5 = 4'h8;
-  localparam CTRL_WAIT6 = 4'h9;
-  localparam CTRL_WAIT7 = 4'ha;
-  localparam CTRL_WAIT8 = 4'hb;
-  localparam CTRL_READY = 4'hc;
+  localparam PRE_CYCLES  = 4'h2;
+  localparam POST_CYCLES = 4'h2;
+
+  localparam CTRL_IDLE      = 4'h0;
+  localparam CTRL_PRE_WAIT  = 4'h1;
+  localparam CTRL_MULACC    = 4'h2;
+  localparam CTRL_POST_WAIT = 4'h3;
 
 
   //----------------------------------------------------------------
@@ -120,24 +114,26 @@ module poly1305_pblock(
   reg [31 : 0] rr3_reg;
   reg [31 : 0] rr3_new;
 
-  reg [63 : 0]  x0_reg;
   wire [63 : 0] x0_new;
-  reg [63 : 0]  x1_reg;
   wire [63 : 0] x1_new;
-  reg [63 : 0]  x2_reg;
   wire [63 : 0] x2_new;
-  reg [63 : 0]  x3_reg;
   wire [63 : 0] x3_new;
   reg [63 : 0]  x4_reg;
   reg [63 : 0]  x4_new;
 
-  reg         ready_reg;
-  reg         ready_new;
-  reg         ready_we;
+  reg [3 : 0]   cycle_ctr_reg;
+  reg [3 : 0]   cycle_ctr_new;
+  reg           cycle_ctr_we;
+  reg           cycle_ctr_rst;
+  reg           cycle_ctr_inc;
 
-  reg [3 : 0] pblock_ctrl_reg;
-  reg [3 : 0] pblock_ctrl_new;
-  reg         pblock_ctrl_we;
+  reg           ready_reg;
+  reg           ready_new;
+  reg           ready_we;
+
+  reg [3 : 0]   pblock_ctrl_reg;
+  reg [3 : 0]   pblock_ctrl_new;
+  reg           pblock_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -258,10 +254,6 @@ module poly1305_pblock(
           rr1_reg         <= 32'h0;
           rr2_reg         <= 32'h0;
           rr3_reg         <= 32'h0;
-          x0_reg          <= 64'h0;
-          x1_reg          <= 64'h0;
-          x2_reg          <= 64'h0;
-          x3_reg          <= 64'h0;
           x4_reg          <= 64'h0;
           u0_reg          <= 64'h0;
           u1_reg          <= 64'h0;
@@ -269,6 +261,7 @@ module poly1305_pblock(
           u3_reg          <= 64'h0;
           u4_reg          <= 64'h0;
           u5_reg          <= 64'h0;
+          cycle_ctr_reg   <= 4'h0;
           ready_reg       <= 1'h0;
           pblock_ctrl_reg <= CTRL_IDLE;
         end
@@ -285,10 +278,6 @@ module poly1305_pblock(
           rr2_reg <= rr2_new;
           rr3_reg <= rr3_new;
 
-          x0_reg  <= x0_new;
-          x1_reg  <= x1_new;
-          x2_reg  <= x2_new;
-          x3_reg  <= x3_new;
           x4_reg  <= x4_new;
 
           u0_reg  <= u0_new;
@@ -298,11 +287,14 @@ module poly1305_pblock(
           u4_reg  <= u4_new;
           u5_reg  <= u5_new;
 
-          if (pblock_ctrl_we)
-            pblock_ctrl_reg <= pblock_ctrl_new;
+          if (cycle_ctr_we)
+            cycle_ctr_reg <= cycle_ctr_new;
 
           if (ready_we)
             ready_reg <= ready_new;
+
+          if (pblock_ctrl_we)
+            pblock_ctrl_reg <= pblock_ctrl_new;
         end
     end // reg_update
 
@@ -327,18 +319,40 @@ module poly1305_pblock(
       rr3_new = {2'h0, r3[31 : 2]} + r3;
 
 
-      // x0..x3 are calculateds by the mulacc modules.
+      // x0..x3 are calculated by the mulacc modules.
+      // We don't need registers for x0..x3.
       x4_new = s4_reg * {32'h0, (r0 & 32'h3)};
 
 
       // partial reduction modulo 2^130 - 5
-      u5_new = (x4_reg + {32'h0, x3_reg[63 : 32]});
-      u0_new = ({2'h0, u5_reg[31 : 2]} * 5) + {32'h0, x0_reg[31 : 0]};
-      u1_new = u0_reg[63 : 32] + x1_reg[31 : 0] + x0_reg[63 : 32];
-      u2_new = u1_reg[63 : 32] + x2_reg[31 : 0] + x1_reg[63 : 32];
-      u3_new = u2_reg[63 : 32] + x3_reg[31 : 0] + x2_reg[63 : 32];
+      u5_new = (x4_reg + {32'h0, x3_new[63 : 32]});
+      u0_new = ({2'h0, u5_reg[31 : 2]} * 5) + {32'h0, x0_new[31 : 0]};
+      u1_new = u0_reg[63 : 32] + x1_new[31 : 0] + x0_new[63 : 32];
+      u2_new = u1_reg[63 : 32] + x2_new[31 : 0] + x1_new[63 : 32];
+      u3_new = u2_reg[63 : 32] + x3_new[31 : 0] + x2_new[63 : 32];
       u4_new = u3_reg[63 : 32] + u5_reg & 32'h3;
     end // pblock_logic
+
+
+  //----------------------------------------------------------------
+  // cycle_ctr
+  //----------------------------------------------------------------
+  always @*
+    begin : cycle_ctr
+      cycle_ctr_new = 4'h0;
+      cycle_ctr_we  = 1'h0;
+
+      if (cycle_ctr_rst)
+        begin
+          cycle_ctr_new = 4'h0;
+          cycle_ctr_we  = 1'h1;
+        end
+      else if (cycle_ctr_inc)
+        begin
+          cycle_ctr_new = cycle_ctr_reg + 1'h1;
+          cycle_ctr_we  = 1'h1;
+        end
+    end
 
 
   //----------------------------------------------------------------
@@ -349,6 +363,8 @@ module poly1305_pblock(
       ready_new       = 1'h1;
       ready_we        = 1'h0;
       mulacc_start    = 1'h0;
+      cycle_ctr_rst   = 1'h0;
+      cycle_ctr_inc   = 1'h0;
       pblock_ctrl_new = CTRL_IDLE;
       pblock_ctrl_we  = 1'h0;
 
@@ -359,88 +375,44 @@ module poly1305_pblock(
               begin
                 ready_new       = 1'h0;
                 ready_we        = 1'h1;
-                pblock_ctrl_new = CTRL_WAIT0;
+                cycle_ctr_rst   = 1'h1;
+                pblock_ctrl_new = CTRL_PRE_WAIT;
                 pblock_ctrl_we  = 1'h1;
               end
           end
 
-        CTRL_WAIT0:
+        CTRL_PRE_WAIT:
           begin
-            pblock_ctrl_new = CTRL_WAIT1;
-            pblock_ctrl_we  = 1'h1;
+            cycle_ctr_inc = 1'h1;
+            if (cycle_ctr_reg == PRE_CYCLES)
+              begin
+                mulacc_start    = 1'h1;
+                pblock_ctrl_new = CTRL_MULACC;
+                pblock_ctrl_we  = 1'h1;
+              end
           end
 
-        CTRL_WAIT1:
-          begin
-            pblock_ctrl_new = CTRL_START;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_START:
-          begin
-            mulacc_start    = 1'h1;
-            pblock_ctrl_new = CTRL_DONE;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_DONE:
+        CTRL_MULACC:
           begin
             if ((mulacc0_ready) || (mulacc1_ready) ||
                 (mulacc2_ready) || (mulacc3_ready))
               begin
-                pblock_ctrl_new = CTRL_WAIT2;
+                cycle_ctr_rst   = 1'h1;
+                pblock_ctrl_new = CTRL_POST_WAIT;
                 pblock_ctrl_we  = 1'h1;
               end
           end
 
-        CTRL_WAIT2:
+        CTRL_POST_WAIT:
           begin
-            pblock_ctrl_new = CTRL_WAIT3;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_WAIT3:
-          begin
-            pblock_ctrl_new = CTRL_WAIT4;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_WAIT4:
-          begin
-            pblock_ctrl_new = CTRL_WAIT5;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_WAIT5:
-          begin
-            pblock_ctrl_new = CTRL_WAIT6;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_WAIT6:
-          begin
-            pblock_ctrl_new = CTRL_WAIT7;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_WAIT7:
-          begin
-            pblock_ctrl_new = CTRL_WAIT8;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_WAIT8:
-          begin
-            pblock_ctrl_new = CTRL_READY;
-            pblock_ctrl_we  = 1'h1;
-          end
-
-        CTRL_READY:
-          begin
-            ready_new        = 1'h1;
-            ready_we         = 1'h1;
-            pblock_ctrl_new  = CTRL_IDLE;
-            pblock_ctrl_we   = 1'h1;
+            cycle_ctr_inc = 1'h1;
+            if (cycle_ctr_reg == POST_CYCLES)
+              begin
+                ready_new       = 1'h1;
+                ready_we        = 1'h1;
+                pblock_ctrl_new = CTRL_IDLE;
+                pblock_ctrl_we  = 1'h1;
+              end
           end
 
         default:
