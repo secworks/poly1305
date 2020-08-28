@@ -56,11 +56,12 @@ module poly1305_core(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam CTRL_IDLE  = 3'h0;
-  localparam CTRL_INIT  = 3'h1;
-  localparam CTRL_NEXT  = 3'h2;
-  localparam CTRL_FINAL = 3'h3;
-  localparam CTRL_DONE  = 3'h7;
+  localparam CTRL_IDLE      = 3'h0;
+  localparam CTRL_INIT      = 3'h1;
+  localparam CTRL_NEXT      = 3'h2;
+  localparam CTRL_NEXT_WAIT = 3'h3;
+  localparam CTRL_FINAL     = 3'h4;
+  localparam CTRL_READY     = 3'h7;
 
 
   //----------------------------------------------------------------
@@ -349,6 +350,7 @@ module poly1305_core(
       load_block             = 1'h0;
       state_update           = 1'h0;
       state_final            = 1'h0;
+      pblock_start           = 1'h0;
       mac_update             = 1'h0;
       ready_new              = 1'h0;
       ready_we               = 1'h0;
@@ -364,14 +366,13 @@ module poly1305_core(
                 state_init             = 1'h1;
                 ready_new              = 1'h0;
                 ready_we               = 1'h1;
-                poly1305_core_ctrl_new = CTRL_DONE;
+                poly1305_core_ctrl_new = CTRL_READY;
                 poly1305_core_ctrl_we  = 1'h1;
               end
 
             if (next)
               begin
                 load_block             = 1'h1;
-                state_update           = 1'h1;
                 ready_new              = 1'h0;
                 ready_we               = 1'h1;
                 poly1305_core_ctrl_new = CTRL_NEXT;
@@ -391,20 +392,32 @@ module poly1305_core(
 
         CTRL_NEXT:
           begin
-            poly1305_core_ctrl_new = CTRL_DONE;
+            pblock_start           = 1'h1;
+            poly1305_core_ctrl_new = CTRL_NEXT_WAIT;
             poly1305_core_ctrl_we  = 1'h1;
+          end
+
+
+        CTRL_NEXT_WAIT:
+          begin
+            if (pblock_ready)
+              begin
+                state_update           = 1'h1;
+                poly1305_core_ctrl_new = CTRL_READY;
+                poly1305_core_ctrl_we  = 1'h1;
+              end
           end
 
 
         CTRL_FINAL:
           begin
             mac_update             = 1'h1;
-            poly1305_core_ctrl_new = CTRL_DONE;
+            poly1305_core_ctrl_new = CTRL_READY;
             poly1305_core_ctrl_we  = 1'h1;
           end
 
 
-        CTRL_DONE:
+        CTRL_READY:
           begin
             ready_new              = 1'h1;
             ready_we               = 1'h1;
