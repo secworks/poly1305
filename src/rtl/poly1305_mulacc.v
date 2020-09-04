@@ -197,7 +197,7 @@ module poly1305_mulacc(
       if (update_mul)
         begin
           mul_new = mul_opa * mul_opb;
-          mul_we          = 1'h1;
+          mul_we  = 1'h1;
         end
 
       if (clear_sum)
