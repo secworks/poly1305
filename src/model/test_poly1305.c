@@ -89,7 +89,9 @@ int p1305_rfc8439() {
   uint8_t my_tag[16];
   crypto_poly1305_ctx my_ctx;
 
-  printf("\nTest p1305_rfc8439: Check that the RFC test vectors work.\n");
+  int res;
+
+  printf("\nTest p1305_rfc8439 started. Check that the RFC test vectors work.\n");
 
   printf("Calling poly1305_init()\n");
   crypto_poly1305_init(&my_ctx, &my_key[0]);
@@ -106,7 +108,58 @@ int p1305_rfc8439() {
   printf("Context after poly1305_final()\n");
   print_context(&my_ctx);
 
-  return check_tag(&my_tag[0], &my_expected[0]);
+  res = check_tag(&my_tag[0], &my_expected[0]);
+  printf("\nTest p1305_rfc8439 completed.\n\n");
+  return res;
+}
+
+
+//------------------------------------------------------------------
+// p1305_bytes1()
+//
+// Test with a single byte message. Key is from the RFC.
+// Se Section 2.5.2.
+//------------------------------------------------------------------
+int p1305_bytes1() {
+
+  const uint8_t my_key[32] = {0x85, 0xd6, 0xbe, 0x78, 0x57, 0x55, 0x6d, 0x33,
+                              0x7f, 0x44, 0x52, 0xfe, 0x42, 0xd5, 0x06, 0xa8,
+                              0x01, 0x03, 0x80, 0x8a, 0xfb, 0x0d, 0xb2, 0xfd,
+                              0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49, 0xf5, 0x1b};
+
+
+  const uint8_t my_message[34] = {0x01};
+
+  uint8_t my_expected[16] = {0x90, 0x5e, 0x15, 0x52, 0x58, 0xb7, 0x74, 0x6e,
+                             0xca, 0x7f, 0x8d, 0x10, 0x90, 0x5e, 0xd1, 0x2a};
+
+  uint8_t my_tag[16];
+  crypto_poly1305_ctx my_ctx;
+
+  int res;
+
+  printf("\nTest p1305_byte1 started.\n");
+
+  printf("Test p1305_byte1: Calling poly1305_init()\n");
+  crypto_poly1305_init(&my_ctx, &my_key[0]);
+  printf("Test p1305_byte1: Context after poly1305_init()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_byte1: Calling poly1305_update() with 1 byte message.\n");
+  crypto_poly1305_update(&my_ctx, &my_message[0], 1);
+  printf("Test p1305_byte1: Context after poly1305_update()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_byte1: Calling poly1305_final() to get tag.\n");
+  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  printf("Test p1305_byte1: Context after poly1305_final()\n");
+  print_context(&my_ctx);
+  printf("Test p1305_byte1: The generated tag:\n");
+  print_hexdata(&my_tag[0], 16);
+
+  res = check_tag(&my_tag[0], &my_expected[0]);
+  printf("Test p1305_byte1 completed.\n");
+  return res;
 }
 
 
@@ -677,7 +730,8 @@ int testcase_15() {
 void run_tests() {
   int test_result = 0;
 
-  test_result += p1305_rfc8439();
+//  test_result += p1305_rfc8439();
+  test_result += p1305_bytes1();
 //  test_result += p1305_test1();
 //  test_result += p1305_test2();
 //  test_result += testcase_0();

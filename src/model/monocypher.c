@@ -10,6 +10,7 @@
 #define WIPE_BUFFER(buffer)  crypto_wipe(buffer, sizeof(buffer))
 #define MIN(a, b)            ((a) <= (b) ? (a) : (b))
 #define ALIGN(x, block_size) ((~(x) + 1) & ((block_size) - 1))
+
 typedef int8_t   i8;
 typedef uint8_t  u8;
 typedef uint32_t u32;
@@ -48,16 +49,19 @@ void crypto_wipe(void *secret, size_t size)
 //------------------------------------------------------------------
 void print_hexdata(uint8_t *data, uint32_t len) {
   uint32_t num_lines = len / 8;
+  printf("Length: 0x%08x\n", len);
 
   for (int i = 0 ; i < num_lines * 8 ; i += 8)
     printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
            data[i], data[i + 1], data[i + 2], data[i + 3],
            data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
+
+  printf("\n");
 }
 
 
 //------------------------------------------------------------------
-// dump_context()
+// print_context()
 //
 // Print the poly1305 context.
 //------------------------------------------------------------------
@@ -75,10 +79,8 @@ void print_context(crypto_poly1305_ctx *ctx) {
 }
 
 
-/////////////////
-/// Poly 1305 ///
-/////////////////
-
+//------------------------------------------------------------------
+// poly_block()
 // h = (h + c) * r
 // preconditions:
 //   ctx->h <= 4_ffffffff_ffffffff_ffffffff_ffffffff
@@ -86,6 +88,7 @@ void print_context(crypto_poly1305_ctx *ctx) {
 //   ctx->r <=   0ffffffc_0ffffffc_0ffffffc_0fffffff
 // Postcondition:
 //   ctx->h <= 4_ffffffff_ffffffff_ffffffff_ffffffff
+//------------------------------------------------------------------
 static void poly_block(crypto_poly1305_ctx *ctx)
 {
   printf("\n");
@@ -159,14 +162,22 @@ static void poly_block(crypto_poly1305_ctx *ctx)
 }
 
 
+//------------------------------------------------------------------
 // (re-)initializes the input counter and input buffer
+//------------------------------------------------------------------
 static void poly_clear_c(crypto_poly1305_ctx *ctx)
 {
-    ctx->c[0]  = 0;
-    ctx->c[1]  = 0;
-    ctx->c[2]  = 0;
-    ctx->c[3]  = 0;
-    ctx->c_idx = 0;
+  printf("\n");
+  printf("poly_clear_c called\n");
+
+  ctx->c[0]  = 0;
+  ctx->c[1]  = 0;
+  ctx->c[2]  = 0;
+  ctx->c[3]  = 0;
+  ctx->c_idx = 0;
+
+  printf("poly_clear_c completed.\n");
+  printf("-----------------------\n\n");
 }
 
 
@@ -185,6 +196,8 @@ static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 
   printf("Context after poly_take_input():\n");
   print_context(ctx);
+
+  printf("poly_take_input() done.\n");
 }
 
 
@@ -194,16 +207,22 @@ static void poly_update(crypto_poly1305_ctx *ctx,
                         const u8 *message, size_t message_size)
 
 {
-  printf("Inside poly_update.\n");
+  printf("poly_update called.\n");
+  printf("Message given:\n");
+  print_hexdata(&message[0], message_size);
 
   FOR (i, 0, message_size) {
-        poly_take_input(ctx, message[i]);
-        if (ctx->c_idx == 16) {
-          printf("Here we do some magic calling poly_block() and then poly_clear_c()\n");
-          poly_block(ctx);
-          poly_clear_c(ctx);
-        }
+    printf("Calling poly_take_input\n");
+    poly_take_input(ctx, message[i]);
+
+    if (ctx->c_idx == 16) {
+      printf("ctx->c_idx == 16, we thus do some magic calling poly_block() and then poly_clear_c()\n");
+      poly_block(ctx);
+      poly_clear_c(ctx);
     }
+  }
+  printf("poly_update completed.\n");
+  printf("----------------------\n\n");
 }
 
 
@@ -211,17 +230,31 @@ static void poly_update(crypto_poly1305_ctx *ctx,
 //------------------------------------------------------------------
 void crypto_poly1305_init(crypto_poly1305_ctx *ctx, const u8 key[32])
 {
-    // Initial hash is zero
-    FOR (i, 0, 5) {
-        ctx->h[i] = 0;
-    }
-    // add 2^130 to every input block
-    ctx->c[4] = 1;
-    poly_clear_c(ctx);
-    // load r and s (r has some of its bits cleared)
-    FOR (i, 0, 1) { ctx->r[0] = load32_le(key           ) & 0x0fffffff; }
-    FOR (i, 1, 4) { ctx->r[i] = load32_le(key + i*4     ) & 0x0ffffffc; }
-    FOR (i, 0, 4) { ctx->s[i] = load32_le(key + i*4 + 16);              }
+  printf("crypto_poly1305_init called.\n");
+  printf("Key given:\n");
+  print_hexdata(&key[0], 32);
+
+  printf("Context before crypto_poly1305_init:\n");
+  print_context(ctx);
+
+  // Initial hash is zero
+  FOR (i, 0, 5) {
+    ctx->h[i] = 0;
+  }
+
+  // add 2^130 to every input block
+  ctx->c[4] = 1;
+  poly_clear_c(ctx);
+
+  // load r and s (r has some of its bits cleared)
+  FOR (i, 0, 1) { ctx->r[0] = load32_le(key           ) & 0x0fffffff; }
+  FOR (i, 1, 4) { ctx->r[i] = load32_le(key + i*4     ) & 0x0ffffffc; }
+  FOR (i, 0, 4) { ctx->s[i] = load32_le(key + i*4 + 16);              }
+
+  printf("Context after crypto_poly1305_init:\n");
+  print_context(ctx);
+  printf("crypto_poly1305_init completed.\n");
+  printf("-------------------------------\n\n");
 }
 
 
@@ -230,30 +263,39 @@ void crypto_poly1305_init(crypto_poly1305_ctx *ctx, const u8 key[32])
 void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
                             const u8 *message, size_t message_size)
 {
-    // Align ourselves with block boundaries
-    size_t align = MIN(ALIGN(ctx->c_idx, 16), message_size);
-    printf("align: 0x%08zx\n", align);
+  printf("crypto_poly1305_update called.\n");
+  printf("Message given:\n");
+  print_hexdata(&message[0], message_size);
 
-    poly_update(ctx, message, align);
-    message      += align;
-    message_size -= align;
+  printf("Context before after crypto_poly1305_update:\n");
+  print_context(ctx);
 
-    // Process the message block by block
-    size_t nb_blocks = message_size >> 4;
-    FOR (i, 0, nb_blocks) {
-        FOR (j, 0, 4) {
-            ctx->c[j] = load32_le(message +  j*4);
-        }
-        poly_block(ctx);
-        message += 16;
+  // Align ourselves with block boundaries
+  size_t align = MIN(ALIGN(ctx->c_idx, 16), message_size);
+  printf("Calculated align: 0x%08zx\n", align);
+
+  printf("Calling poly_update with align as message size:\n");
+  poly_update(ctx, message, align);
+
+  message      += align;
+  message_size -= align;
+
+  // Process the message block by block
+  size_t nb_blocks = message_size >> 4;
+  FOR (i, 0, nb_blocks) {
+    FOR (j, 0, 4) {
+      ctx->c[j] = load32_le(message +  j*4);
     }
-    if (nb_blocks > 0) {
-        poly_clear_c(ctx);
-    }
-    message_size &= 15;
+    poly_block(ctx);
+    message += 16;
+  }
+  if (nb_blocks > 0) {
+    poly_clear_c(ctx);
+  }
+  message_size &= 15;
 
-    // remaining bytes
-    poly_update(ctx, message, message_size);
+  // remaining bytes
+  poly_update(ctx, message, message_size);
 }
 
 
