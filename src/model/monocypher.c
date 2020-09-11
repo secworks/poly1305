@@ -51,10 +51,11 @@ void print_hexdata(uint8_t *data, uint32_t len) {
   uint32_t num_lines = len / 8;
   printf("Length: 0x%08x\n", len);
 
-  for (int i = 0 ; i < num_lines * 8 ; i += 8)
-    printf("0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
-           data[i], data[i + 1], data[i + 2], data[i + 3],
-           data[i + 4], data[i + 5], data[i + 6], data[i + 7]);
+  for (int i = 0 ; i < len ; i += 1) {
+    printf("0x%02x ", data[i]);
+    if ((i > 0) && ((i + 1) % 8 == 0))
+      printf("\n");
+  }
 
   printf("\n");
 }
@@ -282,14 +283,21 @@ void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
 
   // Process the message block by block
   size_t nb_blocks = message_size >> 4;
+  printf("Calculated number of blocks: %lu\n", nb_blocks);
+
+  printf("Looping over all blocks\n");
   FOR (i, 0, nb_blocks) {
+    printf("Block %lu\n", i);
     FOR (j, 0, 4) {
       ctx->c[j] = load32_le(message +  j*4);
     }
+    printf("Running poly_block loaded into ctx->c:\n");
     poly_block(ctx);
     message += 16;
   }
+
   if (nb_blocks > 0) {
+    printf("Clearing ctx->c after processing message blocks\n");
     poly_clear_c(ctx);
   }
   message_size &= 15;

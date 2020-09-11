@@ -128,7 +128,7 @@ int p1305_bytes1() {
                               0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49, 0xf5, 0x1b};
 
 
-  const uint8_t my_message[34] = {0x01};
+  const uint8_t my_message[1] = {0x01};
 
   uint8_t my_expected[16] = {0x90, 0x5e, 0x15, 0x52, 0x58, 0xb7, 0x74, 0x6e,
                              0xca, 0x7f, 0x8d, 0x10, 0x90, 0x5e, 0xd1, 0x2a};
@@ -730,7 +730,7 @@ int testcase_15() {
 void run_tests() {
   int test_result = 0;
 
-//  test_result += p1305_rfc8439();
+  //  test_result += p1305_rfc8439();
   test_result += p1305_bytes1();
 //  test_result += p1305_test1();
 //  test_result += p1305_test2();
