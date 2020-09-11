@@ -267,7 +267,7 @@ void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
   printf("Message given:\n");
   print_hexdata(&message[0], message_size);
 
-  printf("Context before after crypto_poly1305_update:\n");
+  printf("Context before crypto_poly1305_update:\n");
   print_context(ctx);
 
   // Align ourselves with block boundaries
