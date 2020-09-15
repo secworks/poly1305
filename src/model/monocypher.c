@@ -94,10 +94,10 @@ static void poly_block(crypto_poly1305_ctx *ctx)
   printf("\n");
   printf("poly_block started\n");
   printf("------------------\n");
-  printf("Context before processing:\n");
+  printf("poly_block: Context before processing:\n");
   print_context(ctx);
 
-  printf("Intermediate results during processing:\n");
+  printf("poly_block: Intermediate results during processing:\n");
   // s = h + c, without carry propagation
   u64 s0 = ctx->h[0] + (u64)ctx->c[0]; // s0 <= 1_fffffffe
   u64 s1 = ctx->h[1] + (u64)ctx->c[1]; // s1 <= 1_fffffffe
@@ -154,7 +154,7 @@ static void poly_block(crypto_poly1305_ctx *ctx)
   ctx->h[4] = (u32)u4;         // u4 <=          4
 
   printf("\n");
-  printf("Context after pblock processing:\n");
+  printf("poly_block: Context after processing:\n");
   print_context(ctx);
   printf("poly_block completed\n");
   printf("--------------------\n");
@@ -197,7 +197,7 @@ static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
   printf("Context after poly_take_input():\n");
   print_context(ctx);
 
-  printf("poly_take_input() done.\n");
+  printf("poly_take_input() done.\n\n");
 }
 
 
@@ -208,21 +208,27 @@ static void poly_update(crypto_poly1305_ctx *ctx,
 
 {
   printf("poly_update called.\n");
-  printf("Message given:\n");
+  printf("poly_update: Message given:\n");
   print_hexdata(&message[0], message_size);
 
+  if (message_size == 0) {
+    printf("poly_update: message_size == 0. No processing in poly_update done.\n");
+    printf("poly_update completed.\n\n");
+    return;
+  }
+
+
   FOR (i, 0, message_size) {
-    printf("Calling poly_take_input\n");
+    printf("poly_update: Calling poly_take_input\n");
     poly_take_input(ctx, message[i]);
 
     if (ctx->c_idx == 16) {
-      printf("ctx->c_idx == 16, we thus do some magic calling poly_block() and then poly_clear_c()\n");
+      printf("poly_update: ctx->c_idx == 16, we thus do some magic calling poly_block() and then poly_clear_c()\n");
       poly_block(ctx);
       poly_clear_c(ctx);
     }
   }
-  printf("poly_update completed.\n");
-  printf("----------------------\n\n");
+  printf("poly_update completed.\n\n");
 }
 
 
@@ -231,10 +237,11 @@ static void poly_update(crypto_poly1305_ctx *ctx,
 void crypto_poly1305_init(crypto_poly1305_ctx *ctx, u8 key[32])
 {
   printf("crypto_poly1305_init called.\n");
-  printf("Key given:\n");
+  printf("----------------------------\n");
+  printf("crypto_poly1305_init: Key given:\n");
   print_hexdata(&key[0], 32);
 
-  printf("Context before crypto_poly1305_init:\n");
+  printf("crypto_poly1305_init: Context before processing:\n");
   print_context(ctx);
 
   // Initial hash is zero
@@ -251,7 +258,7 @@ void crypto_poly1305_init(crypto_poly1305_ctx *ctx, u8 key[32])
   FOR (i, 1, 4) { ctx->r[i] = load32_le(key + i*4     ) & 0x0ffffffc; }
   FOR (i, 0, 4) { ctx->s[i] = load32_le(key + i*4 + 16);              }
 
-  printf("Context after crypto_poly1305_init:\n");
+  printf("crypto_poly1305_init: Context after processing:\n");
   print_context(ctx);
   printf("crypto_poly1305_init completed.\n");
   printf("-------------------------------\n\n");
@@ -264,6 +271,7 @@ void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
                             u8 *message, size_t message_size)
 {
   printf("crypto_poly1305_update called.\n");
+  printf("------------------------------\n");
   printf("Message given:\n");
   print_hexdata(&message[0], message_size);
 
@@ -272,37 +280,47 @@ void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
 
   // Align ourselves with block boundaries
   size_t align = MIN(ALIGN(ctx->c_idx, 16), message_size);
-  printf("Calculated align: 0x%08zx\n", align);
+  printf("crypto_poly1305_update: Calculated align: 0x%08zx\n", align);
 
-  printf("Calling poly_update with align as message size:\n");
+  printf("crypto_poly1305_update: Calling poly_update with align as message size:\n");
   poly_update(ctx, message, align);
 
   message      += align;
   message_size -= align;
+  printf("crypto_poly1305_update: Message efter alignment:\n");
+  print_hexdata(&message[0], message_size);
+
 
   // Process the message block by block
+  printf("crypto_poly1305_update: Alignment completed. Time for block processing.\n");
   size_t nb_blocks = message_size >> 4;
-  printf("Calculated number of blocks: %lu\n", nb_blocks);
+  printf("crypto_poly1305_update: Calculated number of blocks: %lu\n", nb_blocks);
 
-  printf("Looping over all blocks\n");
+  printf("crypto_poly1305_update: Looping over all blocks\n");
   FOR (i, 0, nb_blocks) {
-    printf("Block %lu\n", i);
+    printf("crypto_poly1305_update: Processing block %lu\n", i);
     FOR (j, 0, 4) {
       ctx->c[j] = load32_le(message +  j*4);
     }
-    printf("Running poly_block loaded into ctx->c:\n");
+    printf("crypto_poly1305_update: Calling poly_block with block le32-loaded into ctx->c:\n");
     poly_block(ctx);
     message += 16;
   }
+    printf("crypto_poly1305_update: All blocks processed.\n");
 
   if (nb_blocks > 0) {
-    printf("Clearing ctx->c after processing message blocks\n");
+    printf("crypto_poly1305_update: Clearing ctx->c after processing message blocks\n");
     poly_clear_c(ctx);
   }
   message_size &= 15;
+  printf("crypto_poly1305_update: Message size after final adjustment: %zu\n", message_size);
 
   // remaining bytes
+  printf("crypto_poly1305_update: Calling poly_update a final time.\n");
   poly_update(ctx, message, message_size);
+
+  printf("crypto_poly1305_update completed.\n");
+  printf("---------------------------------\n\n");
 }
 
 
@@ -314,17 +332,23 @@ void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
   printf("crypto_poly1305_final started\n");
   printf("-----------------------------\n");
 
+  printf("crypto_poly1305_final: Handling last block and updating ctx->c based on c_idx.\n");
   // Process the last block (if any)
   if (ctx->c_idx != 0) {
+    printf("crypto_poly1305_final: ctx->c_idx != 0.\n");
     // move the final 1 according to remaining input length
     // (We may add less than 2^130 to the last input block)
     ctx->c[4] = 0;
+    printf("crypto_poly1305_final: Adjusted ctx->c[4] = 0.\n");
+    printf("crypto_poly1305_final: Calling poly_take_input with message length 1.\n");
     poly_take_input(ctx, 1);
     // one last hash update
+    printf("crypto_poly1305_final: Calling poly_block once more.\n");
     poly_block(ctx);
   }
+  printf("crypto_poly1305_final: Final block handling done.\n");
 
-  printf("Context before processing:\n");
+  printf("crypto_poly1305_final: Context before final processing:\n");
   print_context(ctx);
 
   // check if we should subtract 2^130-5 by performing the
@@ -342,8 +366,7 @@ void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
   u64 uu2 = (uu1 >> 32)   + ctx->h[2] + ctx->s[2]; // <= 2_00000000
   u64 uu3 = (uu2 >> 32)   + ctx->h[3] + ctx->s[3]; // <= 2_00000000
 
-  printf("Intermediate results during processing:\n");
-
+  printf("crypto_poly1305_final: Intermediate results during final processing:\n");
   printf("u0  = 0x%016llx, u1  = 0x%016llx, u2  = 0x%016llx\n", u0, u1, u2);
   printf("u3  = 0x%016llx, u4  = 0x%016llx\n", u3, u4);
   printf("\n");
@@ -359,21 +382,24 @@ void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
 
   printf("m0 = 0x%08x, m1 = 0x%08x\n", m0, m1);
   printf("m2 = 0x%08x, m3 = 0x%08x\n", m2, m3);
-  printf("\n");
+  printf("\n\n");
+  printf("crypto_poly1305_final: Final processing done.\n");
 
+  printf("crypto_poly1305_final: Assembling the mac by applying le32 on m0..m3:\n");
   store32_le(mac     , (u32)m0);
   store32_le(mac +  4, (u32)m1);
   store32_le(mac +  8, (u32)m2);
   store32_le(mac + 12, (u32)m3);
 
-  printf("The resulting mac:\n");
+  printf("crypto_poly1305_final: The resulting mac:\n");
   print_hexdata(&mac[0], 16);
   printf("\n");
 
-  printf("Context after processing:\n");
+  printf("crypto_poly1305_final: Context before wiping:\n");
   print_context(ctx);
-
   WIPE_CTX(ctx);
+  printf("crypto_poly1305_final: Context after wiping:\n");
+  print_context(ctx);
 
   printf("crypto_poly1305_final completed\n");
   printf("-------------------------------\n");
