@@ -213,6 +213,55 @@ int p1305_bytes17() {
 
 
 //------------------------------------------------------------------
+// p1305_bytes16()
+//
+// Test with a 16 byte message. Key is from the RFC.
+// Se Section 2.5.2.
+//------------------------------------------------------------------
+int p1305_bytes16() {
+
+  uint8_t my_key[32] = {0x85, 0xd6, 0xbe, 0x78, 0x57, 0x55, 0x6d, 0x33,
+                        0x7f, 0x44, 0x52, 0xfe, 0x42, 0xd5, 0x06, 0xa8,
+                        0x01, 0x03, 0x80, 0x8a, 0xfb, 0x0d, 0xb2, 0xfd,
+                        0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49, 0xf5, 0x1b};
+
+  uint8_t my_message[16] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                            0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10};
+
+  uint8_t my_expected[16] = {0xe1, 0x16, 0x6a, 0x3c, 0xc0, 0xd9, 0x65, 0xfc,
+                             0xe4, 0x5d, 0xc8, 0x19, 0x64, 0x43, 0x69, 0x73};
+
+  uint8_t my_tag[16];
+  crypto_poly1305_ctx my_ctx;
+
+  int res;
+
+  printf("\nTest p1305_bytes16 started.\n");
+
+  printf("Test p1305_bytes16: Calling poly1305_init()\n");
+  crypto_poly1305_init(&my_ctx, &my_key[0]);
+  printf("Test p1305_byte1: Context after poly1305_init()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_bytes16: Calling poly1305_update() with 16 byte message.\n");
+  crypto_poly1305_update(&my_ctx, &my_message[0], 16);
+  printf("Test p1305_bytes16: Context after poly1305_update()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_bytes16: Calling poly1305_final() to get tag.\n");
+  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  printf("Test p1305_bytes16: Context after poly1305_final()\n");
+  print_context(&my_ctx);
+  printf("Test p1305_bytes16: The generated tag:\n");
+  print_hexdata(&my_tag[0], 16);
+
+  res = check_tag(&my_tag[0], &my_expected[0]);
+  printf("Test p1305_bytes16 completed.\n");
+  return res;
+}
+
+
+//------------------------------------------------------------------
 // p1305_test2()
 //
 // Test that we can get a mac for a message with multiple blocks.
@@ -795,8 +844,9 @@ void run_tests() {
   int test_result = 0;
 
   //  test_result += p1305_rfc8439();
-  test_result += p1305_bytes1();
-  test_result += p1305_bytes17();
+  // test_result += p1305_bytes1();
+  test_result += p1305_bytes16();
+  //  test_result += p1305_bytes17();
 //  test_result += p1305_test1();
 //  test_result += p1305_test2();
 //  test_result += testcase_0();
