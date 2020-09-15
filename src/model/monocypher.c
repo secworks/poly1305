@@ -18,7 +18,7 @@ typedef int32_t  i32;
 typedef int64_t  i64;
 typedef uint64_t u64;
 
-static u32 load32_le(const u8 s[4])
+static u32 load32_le(u8 s[4])
 {
     return (u32)s[0]
         | ((u32)s[1] <<  8)
@@ -48,7 +48,6 @@ void crypto_wipe(void *secret, size_t size)
 // Dump hex data
 //------------------------------------------------------------------
 void print_hexdata(uint8_t *data, uint32_t len) {
-  uint32_t num_lines = len / 8;
   printf("Length: 0x%08x\n", len);
 
   for (int i = 0 ; i < len ; i += 1) {
@@ -100,48 +99,48 @@ static void poly_block(crypto_poly1305_ctx *ctx)
 
   printf("Intermediate results during processing:\n");
   // s = h + c, without carry propagation
-  const u64 s0 = ctx->h[0] + (u64)ctx->c[0]; // s0 <= 1_fffffffe
-  const u64 s1 = ctx->h[1] + (u64)ctx->c[1]; // s1 <= 1_fffffffe
-  const u64 s2 = ctx->h[2] + (u64)ctx->c[2]; // s2 <= 1_fffffffe
-  const u64 s3 = ctx->h[3] + (u64)ctx->c[3]; // s3 <= 1_fffffffe
-  const u32 s4 = ctx->h[4] +      ctx->c[4]; // s4 <=          5
+  u64 s0 = ctx->h[0] + (u64)ctx->c[0]; // s0 <= 1_fffffffe
+  u64 s1 = ctx->h[1] + (u64)ctx->c[1]; // s1 <= 1_fffffffe
+  u64 s2 = ctx->h[2] + (u64)ctx->c[2]; // s2 <= 1_fffffffe
+  u64 s3 = ctx->h[3] + (u64)ctx->c[3]; // s3 <= 1_fffffffe
+  u32 s4 = ctx->h[4] +      ctx->c[4]; // s4 <=          5
 
   printf("s0  = 0x%016llx, s1  = 0x%016llx, s2  = 0x%016llx\n", s0, s1, s2);
   printf("s3  = 0x%016llx, s4  = 0x%016x\n", s3, s4);
   printf("\n");
 
   // Local all the things!
-  const u32 r0 = ctx->r[0];       // r0  <= 0fffffff
-  const u32 r1 = ctx->r[1];       // r1  <= 0ffffffc
-  const u32 r2 = ctx->r[2];       // r2  <= 0ffffffc
-  const u32 r3 = ctx->r[3];       // r3  <= 0ffffffc
-  const u32 rr0 = (r0 >> 2) * 5;  // rr0 <= 13fffffb // lose 2 bits...
-  const u32 rr1 = (r1 >> 2) + r1; // rr1 <= 13fffffb // rr1 == (r1 >> 2) * 5
-  const u32 rr2 = (r2 >> 2) + r2; // rr2 <= 13fffffb // rr1 == (r2 >> 2) * 5
-  const u32 rr3 = (r3 >> 2) + r3; // rr3 <= 13fffffb // rr1 == (r3 >> 2) * 5
+  u32 r0 = ctx->r[0];       // r0  <= 0fffffff
+  u32 r1 = ctx->r[1];       // r1  <= 0ffffffc
+  u32 r2 = ctx->r[2];       // r2  <= 0ffffffc
+  u32 r3 = ctx->r[3];       // r3  <= 0ffffffc
+  u32 rr0 = (r0 >> 2) * 5;  // rr0 <= 13fffffb // lose 2 bits...
+  u32 rr1 = (r1 >> 2) + r1; // rr1 <= 13fffffb // rr1 == (r1 >> 2) * 5
+  u32 rr2 = (r2 >> 2) + r2; // rr2 <= 13fffffb // rr1 == (r2 >> 2) * 5
+  u32 rr3 = (r3 >> 2) + r3; // rr3 <= 13fffffb // rr1 == (r3 >> 2) * 5
 
   printf("rr0 = 0x%016x, rr1 = 0x%016x, rr2 = 0x%016x, rr3 = 0x%016x\n",
          rr0, rr1, rr2, rr3);
   printf("\n");
 
   // (h + c) * r, without carry propagation
-  const u64 x0 = s0*r0 + s1*rr3 + s2*rr2 + s3*rr1 + s4*rr0; // <= 97ffffe007fffff8
-  const u64 x1 = s0*r1 + s1*r0  + s2*rr3 + s3*rr2 + s4*rr1; // <= 8fffffe20ffffff6
-  const u64 x2 = s0*r2 + s1*r1  + s2*r0  + s3*rr3 + s4*rr2; // <= 87ffffe417fffff4
-  const u64 x3 = s0*r3 + s1*r2  + s2*r1  + s3*r0  + s4*rr3; // <= 7fffffe61ffffff2
-  const u32 x4 = s4 * (r0 & 3); // ...recover 2 bits        // <=                f
+  u64 x0 = s0*r0 + s1*rr3 + s2*rr2 + s3*rr1 + s4*rr0; // <= 97ffffe007fffff8
+  u64 x1 = s0*r1 + s1*r0  + s2*rr3 + s3*rr2 + s4*rr1; // <= 8fffffe20ffffff6
+  u64 x2 = s0*r2 + s1*r1  + s2*r0  + s3*rr3 + s4*rr2; // <= 87ffffe417fffff4
+  u64 x3 = s0*r3 + s1*r2  + s2*r1  + s3*r0  + s4*rr3; // <= 7fffffe61ffffff2
+  u32 x4 = s4 * (r0 & 3); // ...recover 2 bits        // <=                f
 
   printf("x0  = 0x%016llx, x1  = 0x%016llx, x2  = 0x%016llx\n", x0, x1, x2);
   printf("x3  = 0x%016llx, x4  = 0x%016x\n", x3, x4);
   printf("\n");
 
   // partial reduction modulo 2^130 - 5
-  const u32 u5 = x4 + (x3 >> 32); // u5 <= 7ffffff5
-  const u64 u0 = (u5 >>  2) * 5 + (x0 & 0xffffffff);
-  const u64 u1 = (u0 >> 32)     + (x1 & 0xffffffff) + (x0 >> 32);
-  const u64 u2 = (u1 >> 32)     + (x2 & 0xffffffff) + (x1 >> 32);
-  const u64 u3 = (u2 >> 32)     + (x3 & 0xffffffff) + (x2 >> 32);
-  const u64 u4 = (u3 >> 32)     + (u5 & 3);
+  u32 u5 = x4 + (x3 >> 32); // u5 <= 7ffffff5
+  u64 u0 = (u5 >>  2) * 5 + (x0 & 0xffffffff);
+  u64 u1 = (u0 >> 32)     + (x1 & 0xffffffff) + (x0 >> 32);
+  u64 u2 = (u1 >> 32)     + (x2 & 0xffffffff) + (x1 >> 32);
+  u64 u3 = (u2 >> 32)     + (x3 & 0xffffffff) + (x2 >> 32);
+  u64 u4 = (u3 >> 32)     + (u5 & 3);
 
   printf("u0  = 0x%016llx, u1  = 0x%016llx, u2  = 0x%016llx\n", u0, u1, u2);
   printf("u3  = 0x%016llx, u4  = 0x%016llx, u5  = 0x%016x\n", u3, u4, u5);
@@ -205,7 +204,7 @@ static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 //------------------------------------------------------------------
 //------------------------------------------------------------------
 static void poly_update(crypto_poly1305_ctx *ctx,
-                        const u8 *message, size_t message_size)
+                        u8 *message, size_t message_size)
 
 {
   printf("poly_update called.\n");
@@ -229,7 +228,7 @@ static void poly_update(crypto_poly1305_ctx *ctx,
 
 //------------------------------------------------------------------
 //------------------------------------------------------------------
-void crypto_poly1305_init(crypto_poly1305_ctx *ctx, const u8 key[32])
+void crypto_poly1305_init(crypto_poly1305_ctx *ctx, u8 key[32])
 {
   printf("crypto_poly1305_init called.\n");
   printf("Key given:\n");
@@ -262,7 +261,7 @@ void crypto_poly1305_init(crypto_poly1305_ctx *ctx, const u8 key[32])
 //------------------------------------------------------------------
 //------------------------------------------------------------------
 void crypto_poly1305_update(crypto_poly1305_ctx *ctx,
-                            const u8 *message, size_t message_size)
+                            u8 *message, size_t message_size)
 {
   printf("crypto_poly1305_update called.\n");
   printf("Message given:\n");
@@ -330,18 +329,18 @@ void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
 
   // check if we should subtract 2^130-5 by performing the
   // corresponding carry propagation.
-  const u64 u0 = (u64)5     + ctx->h[0]; // <= 1_00000004
-  const u64 u1 = (u0 >> 32) + ctx->h[1]; // <= 1_00000000
-  const u64 u2 = (u1 >> 32) + ctx->h[2]; // <= 1_00000000
-  const u64 u3 = (u2 >> 32) + ctx->h[3]; // <= 1_00000000
-  const u64 u4 = (u3 >> 32) + ctx->h[4]; // <=          5
+  u64 u0 = (u64)5     + ctx->h[0]; // <= 1_00000004
+  u64 u1 = (u0 >> 32) + ctx->h[1]; // <= 1_00000000
+  u64 u2 = (u1 >> 32) + ctx->h[2]; // <= 1_00000000
+  u64 u3 = (u2 >> 32) + ctx->h[3]; // <= 1_00000000
+  u64 u4 = (u3 >> 32) + ctx->h[4]; // <=          5
   // u4 indicates how many times we should subtract 2^130-5 (0 or 1)
 
   // h + s, minus 2^130-5 if u4 exceeds 3
-  const u64 uu0 = (u4 >> 2) * 5 + ctx->h[0] + ctx->s[0]; // <= 2_00000003
-  const u64 uu1 = (uu0 >> 32)   + ctx->h[1] + ctx->s[1]; // <= 2_00000000
-  const u64 uu2 = (uu1 >> 32)   + ctx->h[2] + ctx->s[2]; // <= 2_00000000
-  const u64 uu3 = (uu2 >> 32)   + ctx->h[3] + ctx->s[3]; // <= 2_00000000
+  u64 uu0 = (u4 >> 2) * 5 + ctx->h[0] + ctx->s[0]; // <= 2_00000003
+  u64 uu1 = (uu0 >> 32)   + ctx->h[1] + ctx->s[1]; // <= 2_00000000
+  u64 uu2 = (uu1 >> 32)   + ctx->h[2] + ctx->s[2]; // <= 2_00000000
+  u64 uu3 = (uu2 >> 32)   + ctx->h[3] + ctx->s[3]; // <= 2_00000000
 
   printf("Intermediate results during processing:\n");
 
@@ -353,10 +352,10 @@ void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
   printf("uu2 = 0x%016llx, uu3 = 0x%016llx\n", uu2, uu3);
   printf("\n");
 
-  const u32 m0 = (u32)uu0;
-  const u32 m1 = (u32)uu1;
-  const u32 m2 = (u32)uu2;
-  const u32 m3 = (u32)uu3;
+  u32 m0 = (u32)uu0;
+  u32 m1 = (u32)uu1;
+  u32 m2 = (u32)uu2;
+  u32 m3 = (u32)uu3;
 
   printf("m0 = 0x%08x, m1 = 0x%08x\n", m0, m1);
   printf("m2 = 0x%08x, m3 = 0x%08x\n", m2, m3);
@@ -384,8 +383,7 @@ void crypto_poly1305_final(crypto_poly1305_ctx *ctx, u8 mac[16])
 
 //------------------------------------------------------------------
 //------------------------------------------------------------------
-void crypto_poly1305(u8     mac[16],  const u8 *message,
-                     size_t message_size, const u8  key[32])
+void crypto_poly1305(u8 mac[16], u8 *message, size_t message_size, u8 key[32])
 {
   crypto_poly1305_ctx ctx;
   crypto_poly1305_init  (&ctx, key);
