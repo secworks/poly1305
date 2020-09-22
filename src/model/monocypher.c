@@ -186,13 +186,15 @@ static void poly_clear_c(crypto_poly1305_ctx *ctx)
 static void poly_take_input(crypto_poly1305_ctx *ctx, u8 input)
 {
   printf("poly_take_input() called with input: 0x%02x: \n", input);
-  printf("Context before poly_take_input():\n");
+  printf("poly_take_input: Context before poly_take_input():\n");
   print_context(ctx);
 
   size_t word = ctx->c_idx >> 2;
   size_t byte = ctx->c_idx & 3;
   ctx->c[word] |= (u32)input << (byte * 8);
   ctx->c_idx++;
+  printf("poly_take_input: calculated word: %0zu, calculated byte: %0zu\n", word, byte);
+  printf("poly_take_input: ctx->c[word] = 0x%08x\n", ctx->c[word]);
 
   printf("Context after poly_take_input():\n");
   print_context(ctx);
@@ -217,7 +219,7 @@ static void poly_update(crypto_poly1305_ctx *ctx,
     return;
   }
 
-
+  // We loop over the bytes in the message, calling poly_take_input.
   FOR (i, 0, message_size) {
     printf("poly_update: Calling poly_take_input\n");
     poly_take_input(ctx, message[i]);
