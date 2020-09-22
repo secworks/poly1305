@@ -283,6 +283,65 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
+  // test_p1305_bytes16;
+  //
+  // Test with 16 byte message. Key is from the RFC.
+  //----------------------------------------------------------------
+  task test_p1305_bytes16;
+    begin : test_p1305_bytes16
+      $display("*** test_p1305_bytes16 started.\n");
+      inc_tc_ctr();
+
+      tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
+      tb_block = 128'h0;
+
+      tb_debug = 1;
+      #(2 * CLK_PERIOD);
+
+      $display("*** test_p1305_bytes16: Running init() with the RFC key.");
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes16: init() should be completed.");
+      #(CLK_PERIOD);
+
+      $display("*** test_p1305_bytes16: Loading the 16 byte message and running next().");
+      tb_block    = 128'h31323334_35363738_393a3b3c_3d3e3f40;
+      tb_blocklen = 5'h10;
+      tb_next = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes16: next() should be completed.");
+      #(CLK_PERIOD);
+
+      $display("*** test_p1305_bytes16: running finish() to get the MAC.");
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes16: finish() should be completed.");
+
+      #(4 * CLK_PERIOD);
+      tb_debug = 0;
+
+      $display("*** test_p1305_bytes16: Checking the generated MAC.");
+      if (tb_mac == 128'h3b63c42d_c1da46b4_cc0f9f44_8e6e42ec)
+        $display("*** test_p1305_bytes16: Correct MAC generated.");
+      else begin
+        $display("*** test_p1305_bytes16: Error. Incorrect MAC generated.");
+        $display("*** test_p1305_bytes16: Expected: 0x3b63c42dc1da46b4cc0f9f448e6e42ec");
+        $display("*** test_p1305_bytes16: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** test_p1305_bytes16 completed.\n");
+    end
+  endtask // test_p1305_bytes16
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -296,6 +355,7 @@ module tb_poly1305_core();
       reset_dut();
 
       test_rfc8439();
+      test_p1305_bytes16();
 
       display_test_results();
 
