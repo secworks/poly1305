@@ -315,6 +315,9 @@ module tb_poly1305_core();
       wait_ready();
       $display("*** test_p1305_bytes16: next() should be completed.");
       #(CLK_PERIOD);
+      $display("*** test_p1305_bytes16: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
 
       $display("*** test_p1305_bytes16: running finish() to get the MAC.");
       tb_finish = 1;

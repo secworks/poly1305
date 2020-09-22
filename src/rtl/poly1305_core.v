@@ -307,11 +307,11 @@ module poly1305_core(
 
       if (load_block)
         begin
-          c_new[0] = block[031 : 000];
-          c_new[1] = block[063 : 032];
-          c_new[2] = block[095 : 064];
-          c_new[3] = block[127 : 096];
-          c_new[4] = block[127 : 096];
+          c_new[0] = le(block[127 : 096]);
+          c_new[1] = le(block[095 : 064]);
+          c_new[2] = le(block[063 : 032]);
+          c_new[3] = le(block[031 : 000]);
+          c_new[4] = c_reg[4];
           c_we     = 1'h1;
         end
 
