@@ -142,6 +142,13 @@ module tb_poly1305_core();
                dut.c_reg[3], dut.c_reg[4]);
       $display("s:     0x%08x_%08x_%08x_%08x",
                dut.s_reg[0], dut.s_reg[1], dut.s_reg[2], dut.s_reg[3]);
+      $display("");
+      $display("State in pblock:");
+      $display("u0:     0x%016x", dut.pblock_inst.u0_reg);
+      $display("u1:     0x%016x", dut.pblock_inst.u1_reg);
+      $display("u2:     0x%016x", dut.pblock_inst.u2_reg);
+      $display("u3:     0x%016x", dut.pblock_inst.u3_reg);
+      $display("u4:     0x%016x", dut.pblock_inst.u4_reg);
       $display("\n\n");
     end
   endtask // dump_dut_state
