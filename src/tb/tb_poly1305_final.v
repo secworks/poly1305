@@ -250,6 +250,7 @@ module tb_poly1305_final();
     begin : test_rfc8349
       $display("*** test_rfc8349 started.\n");
 
+      tc_ctr = tc_ctr + 1;
       incorrect = 0;
 
       tb_h0 = 32'h369d03a7;
@@ -304,6 +305,69 @@ module tb_poly1305_final();
 
 
   //----------------------------------------------------------------
+  // test_bytes16;
+  //
+  // Test case for bytes16.
+  //----------------------------------------------------------------
+  task test_bytes16;
+    begin : test_bytes16
+      $display("*** test_bytes16 started.\n");
+
+      tc_ctr = tc_ctr + 1;
+      incorrect = 0;
+
+      tb_h0 = 32'ha344603a;
+      tb_h1 = 32'hb694ccc5;
+      tb_h2 = 32'h94a85081;
+      tb_h3 = 32'hd04d254c;
+      tb_h4 = 32'h00000003;
+
+      tb_s0 = 32'h8a800301;
+      tb_s1 = 32'hfdb20dfb;
+      tb_s2 = 32'haff6bf4a;
+      tb_s3 = 32'h1bf54941;
+
+      tb_debug = 1;
+      #(10 * CLK_PERIOD);
+      tb_debug = 0;
+
+      if (tb_hres0 != 32'h2dc4633b)
+        begin
+          $display("Error in hres0. Expected: 0x2dc4633b. Got: 0x%08x\n",
+                   tb_hres0);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_hres1 != 32'hb446dac1)
+        begin
+          $display("Error in hres1. Expected: 0xb446dac1. Got: 0x%08x\n",
+                   tb_hres1);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_hres2 != 32'h449f0fcc)
+        begin
+          $display("Error in hres2. Expected: 0x449f0fcc. Got: 0x%08x\n",
+                   tb_hres2);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_hres3 != 32'hec426e8e)
+        begin
+          $display("Error in hres3. Expected: 0xec426e8e. Got: 0x%08x\n",
+                   tb_hres3);
+          incorrect = incorrect + 1;
+        end
+
+      if (!incorrect)
+        $display("*** test_bytes16 successfully completed.\n");
+      else
+        $display("*** test_bytes16 completed with %d errors.\n", incorrect);
+    end
+  endtask // test_bytes16
+
+
+  //----------------------------------------------------------------
   // poly1305_final_test
   //----------------------------------------------------------------
   initial
@@ -317,6 +381,7 @@ module tb_poly1305_final();
 
       // test_aa();
       test_rfc8349();
+      test_bytes16();
 
       display_test_result();
 
