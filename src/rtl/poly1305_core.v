@@ -76,7 +76,7 @@ module poly1305_core(
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg  [31 : 0] h_reg [0 : 4];
-  wire [31 : 0] h_new [0 : 4];
+  reg  [31 : 0] h_new [0 : 4];
   reg           h_we;
 
   reg [31 : 0]  c_reg [0 : 4];
@@ -121,6 +121,8 @@ module poly1305_core(
   wire [31 : 0] hres2;
   wire [31 : 0] hres3;
 
+  wire [31 : 0] pblock_h_new [0 : 4];
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -160,11 +162,11 @@ module poly1305_core(
                               .r2(r_reg[2]),
                               .r3(r_reg[3]),
 
-                              .h0_new(h_new[0]),
-                              .h1_new(h_new[1]),
-                              .h2_new(h_new[2]),
-                              .h3_new(h_new[3]),
-                              .h4_new(h_new[4])
+                              .h0_new(pblock_h_new[0]),
+                              .h1_new(pblock_h_new[1]),
+                              .h2_new(pblock_h_new[2]),
+                              .h3_new(pblock_h_new[3]),
+                              .h4_new(pblock_h_new[4])
                              );
 
   poly1305_final final_inst(
@@ -265,6 +267,8 @@ module poly1305_core(
     begin : poly1305_core_logic
       integer i;
 
+      for (i = 0 ; i < 5 ; i = i + 1)
+        h_new[i] = 32'h0;
       h_we = 1'h0;
 
       for (i = 0 ; i < 5 ; i = i + 1)
@@ -286,9 +290,7 @@ module poly1305_core(
 
       if (state_init)
         begin
-          c_new[4] = 32'h1;
           c_we     = 1'h1;
-
           h_we     = 1'h1;
 
           r_new[0] = le(key[255 : 224]) & 32'h0fffffff;
@@ -311,21 +313,21 @@ module poly1305_core(
           c_new[1] = le(block[095 : 064]);
           c_new[2] = le(block[063 : 032]);
           c_new[3] = le(block[031 : 000]);
-          c_new[4] = c_reg[4];
+          c_new[4] = c_reg[4] + 1'h1;
           c_we     = 1'h1;
         end
 
 
       if (state_update)
         begin
-          c_we = 1'h1;
+          for (i = 0 ; i < 5 ; i = i + 1)
+            h_new[i] = pblock_h_new[i];
           h_we = 1'h1;
         end
 
 
       if (state_final)
         begin
-          c_we = 1'h1;
           r_we = 1'h1;
         end
 

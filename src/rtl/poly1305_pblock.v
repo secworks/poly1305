@@ -262,7 +262,7 @@ module poly1305_pblock(
           u4_reg          <= 64'h0;
           u5_reg          <= 64'h0;
           cycle_ctr_reg   <= 4'h0;
-          ready_reg       <= 1'h0;
+          ready_reg       <= 1'h1;
           pblock_ctrl_reg <= CTRL_IDLE;
         end
       else

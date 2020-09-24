@@ -57,6 +57,7 @@ module tb_poly1305_core();
   reg [127 : 0]  result_data;
 
   reg            tb_debug;
+  reg            tb_pblock;
 
   reg            tb_clk;
   reg            tb_reset_n;
@@ -122,16 +123,31 @@ module tb_poly1305_core();
   //----------------------------------------------------------------
   task dump_dut_state;
     begin
+      $display("====================================================");
       $display("cycle:  0x%016x", cycle_ctr);
       $display("Input and output:");
+      $display("-----------------");
       $display("init:  0x%01x, next: 0x%01x, finish: 0x%01x",
                tb_init, tb_next, tb_finish);
       $display("ready: 0x%01x", tb_ready);
       $display("key:   0x%064x", tb_key);
       $display("block: 0x%032x", tb_block);
       $display("mac:   0x%032x", tb_mac);
+
+      $display("");
+      $display("Control:");
+      $display("--------");
+      $display("state_init: 0x%01x, state_update: 0x%01x, state_final: 0x%01x",
+               dut.state_init, dut.state_update, dut.state_final);
+      $display("load_block: 0x%01x, mac_update: 0x%01x",
+               dut.load_block, dut.mac_update);
+      $display("ctrl_reg: 0x%01x, ctrl_new: 0x%01x, ctrl_we: 0x%01x",
+               dut.poly1305_core_ctrl_reg, dut.poly1305_core_ctrl_new,
+               dut.poly1305_core_ctrl_we);
+
       $display("");
       $display("Internal state:");
+      $display("---------------");
       $display("r:     0x%08x_%08x_%08x_%08x",
                dut.r_reg[0], dut.r_reg[1], dut.r_reg[2], dut.r_reg[3]);
       $display("h:     0x%08x_%08x_%08x_%08x_%08x",
@@ -142,13 +158,58 @@ module tb_poly1305_core();
                dut.c_reg[3], dut.c_reg[4]);
       $display("s:     0x%08x_%08x_%08x_%08x",
                dut.s_reg[0], dut.s_reg[1], dut.s_reg[2], dut.s_reg[3]);
-      $display("");
-      $display("State in pblock:");
-      $display("u0:     0x%016x", dut.pblock_inst.u0_reg);
-      $display("u1:     0x%016x", dut.pblock_inst.u1_reg);
-      $display("u2:     0x%016x", dut.pblock_inst.u2_reg);
-      $display("u3:     0x%016x", dut.pblock_inst.u3_reg);
-      $display("u4:     0x%016x", dut.pblock_inst.u4_reg);
+
+
+      if (tb_pblock)
+        begin
+          $display("");
+          $display("pblock state:");
+          $display("-------------");
+          $display("start: 0x%01x, ready: 0x%01x", dut.pblock_inst.start,
+                   dut.pblock_inst.ready);
+          $display("ctrl: 0x%01x", dut.pblock_inst.pblock_ctrl_reg);
+          $display("mulacc_start: 0x%01x  mulacc0_ready: ",
+                   dut.pblock_inst.mulacc_start,
+                   dut.pblock_inst.mulacc0_ready);
+          $display("cycle_ctr: 0x%01x  ctr_rst: 0x%01x  ctr_inc: 0x%01x",
+                   dut.pblock_inst.cycle_ctr_reg, dut.pblock_inst.cycle_ctr_rst,
+                   dut.pblock_inst.cycle_ctr_inc);
+          $display("");
+
+          $display("s0: 0x%016x  s1: 0x%016x  s2: 0x%016x",
+                   dut.pblock_inst.s0_reg, dut.pblock_inst.s1_reg,
+                   dut.pblock_inst.s2_reg);
+          $display("s3: 0x%016x  s4: 0x%016x",
+                   dut.pblock_inst.s3_reg, dut.pblock_inst.s4_reg);
+          $display("");
+
+          $display("rr0: 0x%08x  rr1: 0x%08x  rr2: 0x%08x  rr3: 0x%08x",
+                   dut.pblock_inst.rr0_reg, dut.pblock_inst.rr1_reg,
+                   dut.pblock_inst.rr2_reg, dut.pblock_inst.rr3_reg);
+          $display("");
+
+          $display("x0:  0x%016x  x1: 0x%016x  x2: 0x%016x",
+                   dut.pblock_inst.x0_new, dut.pblock_inst.x1_new,
+                   dut.pblock_inst.x2_new);
+          $display("x3:  0x%016x  x4: 0x%016x",
+                   dut.pblock_inst.x3_new, dut.pblock_inst.x4_reg);
+          $display("");
+
+          $display("u0:  0x%016x  u1: 0x%016x u2: 0x%016x",
+                   dut.pblock_inst.u0_reg, dut.pblock_inst.u1_reg,
+                   dut.pblock_inst.u2_reg);
+          $display("u3:  0x%016x  u4: 0x%016x u5: 0x%08x",
+                   dut.pblock_inst.u3_reg, dut.pblock_inst.u4_reg,
+                   dut.pblock_inst.u5_reg);
+          $display("");
+
+          $display("h0: 0x%08x  h1: 0x%08x  h2: 0x%08x  h3: 0x%08x  h4: 0x%08x",
+                   dut.pblock_inst.h0_new, dut.pblock_inst.h1_new,
+                   dut.pblock_inst.h2_new, dut.pblock_inst.h3_new,
+                   dut.pblock_inst.h4_new);
+        end
+
+      $display("====================================================");
       $display("\n\n");
     end
   endtask // dump_dut_state
@@ -205,6 +266,7 @@ module tb_poly1305_core();
       tc_ctr      = 0;
       tb_clk      = 0;
       tb_debug    = 0;
+      tb_pblock   = 0;
       tb_reset_n  = 1;
       tb_init     = 0;
       tb_next     = 0;
@@ -302,7 +364,8 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug = 1;
+      tb_debug  = 1;
+      tb_pblock = 1;
       #(2 * CLK_PERIOD);
 
       $display("*** test_p1305_bytes16: Running init() with the RFC key.");
@@ -316,7 +379,8 @@ module tb_poly1305_core();
       $display("*** test_p1305_bytes16: Loading the 16 byte message and running next().");
       tb_block    = 128'h31323334_35363738_393a3b3c_3d3e3f40;
       tb_blocklen = 5'h10;
-      tb_next = 1;
+      tb_pblock   = 1;
+      tb_next     = 1;
       #(CLK_PERIOD);
       tb_next = 0;
       wait_ready();
@@ -325,6 +389,7 @@ module tb_poly1305_core();
       $display("*** test_p1305_bytes16: Dumping state after next().");
       dump_dut_state();
       #(CLK_PERIOD);
+      tb_pblock = 0;
 
       $display("*** test_p1305_bytes16: running finish() to get the MAC.");
       tb_finish = 1;
@@ -363,6 +428,8 @@ module tb_poly1305_core();
 
       init_sim();
       reset_dut();
+
+      tb_pblock = 1;
 
       test_rfc8439();
       test_p1305_bytes16();
