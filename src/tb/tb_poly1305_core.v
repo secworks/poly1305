@@ -137,8 +137,8 @@ module tb_poly1305_core();
       $display("");
       $display("Control:");
       $display("--------");
-      $display("state_init: 0x%01x, state_update: 0x%01x, state_final: 0x%01x",
-               dut.state_init, dut.state_update, dut.state_final);
+      $display("state_init: 0x%01x, state_update: 0x%01x, mac_update: 0x%01x",
+               dut.state_init, dut.state_update, dut.mac_update);
       $display("load_block: 0x%01x, mac_update: 0x%01x",
                dut.load_block, dut.mac_update);
       $display("ctrl_reg: 0x%01x, ctrl_new: 0x%01x, ctrl_we: 0x%01x",

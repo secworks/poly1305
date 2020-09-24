@@ -64,7 +64,7 @@ module tb_poly1305_final();
   reg           tb_clk;
   reg           tb_reset_n;
 
-  reg           tb_next;
+  reg           tb_start;
   wire          tb_ready;
 
   reg [31 : 0]  tb_h0;
@@ -90,6 +90,9 @@ module tb_poly1305_final();
   poly1305_final dut(
                      .clk(tb_clk),
                      .reset_n(tb_reset_n),
+
+                     .start(tb_start),
+                     .ready(tb_ready),
 
                      .h0(tb_h0),
                      .h1(tb_h1),
@@ -145,30 +148,34 @@ module tb_poly1305_final();
   //----------------------------------------------------------------
   task dump_dut_state;
     begin
+      $display("=====================================================");
+      $display("cycle %08d", cycle_ctr);
       $display("State of DUT");
       $display("------------");
-      $display("Inputs:");
+      $display("Inputs and outputs:");
+      $display("start: 0x%01x, ready: 0x%01x", dut.start, dut.ready);
       $display("h0: 0x%08x  h1: 0x%08x  h2: 0x%08x  h3: 0x%08x  h4: 0x%08x",
                dut.h0, dut.h1, dut.h2, dut.h3, dut.h4);
       $display("s0: 0x%08x  s1: 0x%08x  s2: 0x%08x  s3: 0x%08x",
                dut.s0, dut.s1, dut.s2, dut.s3);
-      $display("");
-
-      $display("Internal values:");
-      $display("u0:  0x%016x  u1: 0x%016x  u2: 0x%016x",
-               dut.u0_reg, dut.u1_reg, dut.u2_reg);
-      $display("u3:  0x%016x  u4: 0x%016x",
-               dut.u3_reg, dut.u4_reg);
-      $display("");
-
-      $display("uu0:  0x%016x  uu1: 0x%016x", dut.uu0_reg, dut.uu1_reg);
-      $display("uu2:  0x%016x  uu3: 0x%016x", dut.uu2_reg, dut.uu3_reg);
-      $display("");
-
-      $display("Outputs:");
       $display("hres0: 0x%08x  hres1: 0x%08x  hres2: 0x%08x  hres3:0x%08x",
                dut.hres0, dut.hres1, dut.hres2, dut.hres3);
       $display("");
+
+      $display("Control:");
+      $display("cycle_ctr: 0x%01x", dut.cycle_ctr_reg);
+      $display("ctrl:      0x%01x", dut.final_ctrl_reg);
+      $display("");
+      $display("Internal values:");
+      $display("u0:   0x%016x  u1: 0x%016x  u2: 0x%016x",
+               dut.u0_reg, dut.u1_reg, dut.u2_reg);
+      $display("u3:   0x%016x  u4: 0x%016x",
+               dut.u3_reg, dut.u4_reg);
+      $display("uu0:  0x%016x  uu1: 0x%016x", dut.uu0_reg, dut.uu1_reg);
+      $display("uu2:  0x%016x  uu3: 0x%016x", dut.uu2_reg, dut.uu3_reg);
+
+      $display("=====================================================");
+      $display("\n");
     end
   endtask // dump_dut_state
 
@@ -189,6 +196,19 @@ module tb_poly1305_final();
 
 
   //----------------------------------------------------------------
+  // wait_ready()
+  //
+  // Wait for the ready flag to be set in dut.
+  //----------------------------------------------------------------
+  task wait_ready;
+    begin : wready
+      while (!tb_ready)
+        #(CLK_PERIOD);
+    end
+  endtask // wait_ready
+
+
+  //----------------------------------------------------------------
   // init_sim()
   //
   // Initialize all counters and testbed functionality as well
@@ -204,6 +224,8 @@ module tb_poly1305_final();
 
       tb_clk     = 0;
       tb_reset_n = 1;
+
+      tb_start   = 0;
 
       tb_h0      = 32'h0;
       tb_h1      = 32'h0;
@@ -265,7 +287,13 @@ module tb_poly1305_final();
       tb_s3 = 32'h1bf54941;
 
       tb_debug = 1;
-      #(10 * CLK_PERIOD);
+      tb_start = 1;
+      #(1 * CLK_PERIOD);
+      tb_start = 0;
+      wait_ready();
+      $display("DUT should be done.");
+
+      #(2 * CLK_PERIOD);
       tb_debug = 0;
 
       if (tb_hres0 != 32'hc11d06a8)
@@ -328,7 +356,15 @@ module tb_poly1305_final();
       tb_s3 = 32'h1bf54941;
 
       tb_debug = 1;
-      #(10 * CLK_PERIOD);
+      #(2 * CLK_PERIOD);
+
+      tb_start = 1;
+      #(1 * CLK_PERIOD);
+      tb_start = 0;
+      wait_ready();
+      $display("DUT should be done.");
+
+      #(2 * CLK_PERIOD);
       tb_debug = 0;
 
       if (tb_hres0 != 32'h2dc4633b)

@@ -110,9 +110,11 @@ module poly1305_core(
   reg  pblock_start;
   wire pblock_ready;
 
+  reg  final_start;
+  wire final_ready;
+
   reg state_init;
   reg state_update;
-  reg state_final;
   reg load_block;
   reg mac_update;
 
@@ -172,6 +174,9 @@ module poly1305_core(
   poly1305_final final_inst(
                             .clk(clk),
                             .reset_n(reset_n),
+
+                            .start(final_start),
+                            .ready(final_ready),
 
                             .h0(h_reg[0]),
                             .h1(h_reg[1]),
@@ -326,12 +331,6 @@ module poly1305_core(
         end
 
 
-      if (state_final)
-        begin
-          r_we = 1'h1;
-        end
-
-
       if (mac_update)
         begin
           mac_new[0] = le(hres0);
@@ -351,8 +350,8 @@ module poly1305_core(
       state_init             = 1'h0;
       load_block             = 1'h0;
       state_update           = 1'h0;
-      state_final            = 1'h0;
       pblock_start           = 1'h0;
+      final_start            = 1'h0;
       mac_update             = 1'h0;
       ready_new              = 1'h0;
       ready_we               = 1'h0;
@@ -383,7 +382,7 @@ module poly1305_core(
 
             if (finish)
               begin
-                state_final            = 1'h1;
+                final_start            = 1'h1;
                 ready_new              = 1'h0;
                 ready_we               = 1'h1;
                 poly1305_core_ctrl_new = CTRL_FINAL;
@@ -413,9 +412,12 @@ module poly1305_core(
 
         CTRL_FINAL:
           begin
-            mac_update             = 1'h1;
-            poly1305_core_ctrl_new = CTRL_READY;
-            poly1305_core_ctrl_we  = 1'h1;
+            if (final_ready)
+              begin
+                mac_update             = 1'h1;
+                poly1305_core_ctrl_new = CTRL_READY;
+                poly1305_core_ctrl_we  = 1'h1;
+              end
           end
 
 

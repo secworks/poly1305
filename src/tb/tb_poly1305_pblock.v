@@ -275,6 +275,19 @@ module tb_poly1305_pblock();
 
 
   //----------------------------------------------------------------
+  // wait_ready()
+  //
+  // Wait for the ready flag to be set in dut.
+  //----------------------------------------------------------------
+  task wait_ready;
+    begin : wready
+      while (!tb_ready)
+        #(CLK_PERIOD);
+    end
+  endtask // wait_ready
+
+
+  //----------------------------------------------------------------
   // display_test_result()
   //
   // Display the accumulated test results.
@@ -326,13 +339,15 @@ module tb_poly1305_pblock();
       tb_r3 = 32'h0806d540;
 
       tb_debug = 1;
+      #(2 * CLK_PERIOD);
 
       tb_start = 1;
-      #(2 * CLK_PERIOD);
+      #(1 * CLK_PERIOD);
       tb_start = 0;
+      wait_ready();
 
-      while(!tb_ready)
-        #(CLK_PERIOD);
+      #(2 * CLK_PERIOD);
+      tb_debug = 0;
 
       if (tb_h0_new != 32'h369d03a7)
         begin
@@ -407,13 +422,15 @@ module tb_poly1305_pblock();
       tb_r3 = 32'h0806d540;
 
       tb_debug = 1;
+      #(2 * CLK_PERIOD);
 
       tb_start = 1;
-      #(2 * CLK_PERIOD);
+      #(1 * CLK_PERIOD);
       tb_start = 0;
+      wait_ready();
 
-      while(!tb_ready)
-        #(CLK_PERIOD);
+      #(2 * CLK_PERIOD);
+      tb_debug = 0;
 
       $display("*** test_p1305_bytes16: DUT should be done.");
       #(2 * CLK_PERIOD);

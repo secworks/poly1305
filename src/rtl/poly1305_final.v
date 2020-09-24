@@ -38,6 +38,9 @@ module poly1305_final(
                       input wire          clk,
                       input wire          reset_n,
 
+                      input wire          start,
+                      output wire         ready,
+
                       input wire [31 : 0] h0,
                       input wire [31 : 0] h1,
                       input wire [31 : 0] h2,
@@ -54,6 +57,16 @@ module poly1305_final(
                       output wire [31 : 0] hres2,
                       output wire [31 : 0] hres3
                       );
+
+
+
+  //----------------------------------------------------------------
+  // Parameters and symbolic values.
+  //----------------------------------------------------------------
+  localparam PIPE_CYCLES    = 4'h0;
+
+  localparam CTRL_IDLE      = 2'h0;
+  localparam CTRL_PIPE_WAIT = 2'h1;
 
 
   //----------------------------------------------------------------
@@ -79,10 +92,26 @@ module poly1305_final(
   reg [63 : 0] uu3_reg;
   reg [63 : 0] uu3_new;
 
+  reg [3 : 0]  cycle_ctr_reg;
+  reg [3 : 0]  cycle_ctr_new;
+  reg          cycle_ctr_we;
+  reg          cycle_ctr_rst;
+  reg          cycle_ctr_inc;
+
+  reg          ready_reg;
+  reg          ready_new;
+  reg          ready_we;
+
+  reg [1 : 0]  final_ctrl_reg;
+  reg [1 : 0]  final_ctrl_new;
+  reg          final_ctrl_we;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign ready = ready_reg;
+
   assign hres0 = uu0_reg[31 : 0];
   assign hres1 = uu1_reg[31 : 0];
   assign hres2 = uu2_reg[31 : 0];
@@ -100,16 +129,18 @@ module poly1305_final(
      begin : reg_update
        if (!reset_n)
          begin
-           u0_reg  <= 64'h0;
-           u1_reg  <= 64'h0;
-           u2_reg  <= 64'h0;
-           u3_reg  <= 64'h0;
-           u4_reg  <= 64'h0;
-
-           uu0_reg <= 64'h0;
-           uu1_reg <= 64'h0;
-           uu2_reg <= 64'h0;
-           uu3_reg <= 64'h0;
+           u0_reg        <= 64'h0;
+           u1_reg        <= 64'h0;
+           u2_reg        <= 64'h0;
+           u3_reg        <= 64'h0;
+           u4_reg        <= 64'h0;
+           uu0_reg       <= 64'h0;
+           uu1_reg       <= 64'h0;
+           uu2_reg       <= 64'h0;
+           uu3_reg       <= 64'h0;
+          cycle_ctr_reg  <= 4'h0;
+          ready_reg      <= 1'h1;
+          final_ctrl_reg <= CTRL_IDLE;
          end
        else
          begin
@@ -123,6 +154,15 @@ module poly1305_final(
            uu1_reg <= uu1_new;
            uu2_reg <= uu2_new;
            uu3_reg <= uu3_new;
+
+           if (cycle_ctr_we)
+             cycle_ctr_reg <= cycle_ctr_new;
+
+           if (ready_we)
+             ready_reg <= ready_new;
+
+           if (final_ctrl_we)
+             final_ctrl_reg <= final_ctrl_new;
          end
      end // reg_update
 
@@ -143,6 +183,71 @@ module poly1305_final(
        uu2_new = uu1_reg[63 : 32]     + h2 + s2; // <= 2_00000000
        uu3_new = uu2_reg[63 : 32]     + h3 + s3; // <= 2_00000000
      end
+
+
+  //----------------------------------------------------------------
+  // cycle_ctr
+  //----------------------------------------------------------------
+  always @*
+    begin : cycle_ctr
+      cycle_ctr_new = 4'h0;
+      cycle_ctr_we  = 1'h0;
+
+      if (cycle_ctr_rst)
+        begin
+          cycle_ctr_new = 4'h0;
+          cycle_ctr_we  = 1'h1;
+        end
+      else if (cycle_ctr_inc)
+        begin
+          cycle_ctr_new = cycle_ctr_reg + 1'h1;
+          cycle_ctr_we  = 1'h1;
+        end
+    end
+
+
+  //----------------------------------------------------------------
+  // final_ctrl
+  //----------------------------------------------------------------
+  always @*
+    begin : final_ctrl
+      ready_new      = 1'h1;
+      ready_we       = 1'h0;
+      cycle_ctr_rst  = 1'h0;
+      cycle_ctr_inc  = 1'h0;
+      final_ctrl_new = CTRL_IDLE;
+      final_ctrl_we  = 1'h0;
+
+      case (final_ctrl_reg)
+        CTRL_IDLE:
+          begin
+            if (start)
+              begin
+                ready_new      = 1'h0;
+                ready_we       = 1'h1;
+                cycle_ctr_rst  = 1'h1;
+                final_ctrl_new = CTRL_PIPE_WAIT;
+                final_ctrl_we  = 1'h1;
+              end
+          end
+
+        CTRL_PIPE_WAIT:
+          begin
+            cycle_ctr_inc = 1'h1;
+            if (cycle_ctr_reg == PIPE_CYCLES)
+              begin
+                ready_new      = 1'h1;
+                ready_we       = 1'h1;
+                final_ctrl_new = CTRL_IDLE;
+                final_ctrl_we  = 1'h1;
+              end
+          end
+
+        default:
+          begin
+          end
+      endcase // case (final_ctrl_reg)
+    end // block: final_ctrl
 
 endmodule // poly1305_final
 
