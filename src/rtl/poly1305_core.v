@@ -333,10 +333,10 @@ module poly1305_core(
 
       if (mac_update)
         begin
-          mac_new[0] = le(hres0);
-          mac_new[1] = le(hres1);
-          mac_new[2] = le(hres2);
-          mac_new[3] = le(hres3);
+          mac_new[3] = le(hres0);
+          mac_new[2] = le(hres1);
+          mac_new[1] = le(hres2);
+          mac_new[0] = le(hres3);
           mac_we     = 1'h1;
         end
     end // poly1305_core_logic

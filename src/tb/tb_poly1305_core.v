@@ -58,6 +58,7 @@ module tb_poly1305_core();
 
   reg            tb_debug;
   reg            tb_pblock;
+  reg            tb_final;
 
   reg            tb_clk;
   reg            tb_reset_n;
@@ -209,6 +210,32 @@ module tb_poly1305_core();
                    dut.pblock_inst.h4_new);
         end
 
+
+      if (tb_final)
+        begin
+          $display("");
+          $display("final state:");
+          $display("------------");
+          $display("start: 0x%01x, ready: 0x%01x", dut.final_inst.start,
+                   dut.final_inst.ready);
+          $display("ctrl: 0x%01x", dut.final_inst.final_ctrl_reg);
+          $display("");
+          $display("hres0: 0x%08x  hres1: 0x%08x  hres2: 0x%08x  hres3:0x%08x",
+                   dut.final_inst.hres0, dut.final_inst.hres1,
+                   dut.final_inst.hres2, dut.final_inst.hres3);
+          $display("");
+
+          $display("u0:   0x%016x  u1: 0x%016x  u2: 0x%016x",
+                   dut.final_inst.u0_reg, dut.final_inst.u1_reg,
+                   dut.final_inst.u2_reg);
+          $display("u3:   0x%016x  u4: 0x%016x",
+                   dut.final_inst.u3_reg, dut.final_inst.u4_reg);
+          $display("uu0:  0x%016x  uu1: 0x%016x",
+                   dut.final_inst.uu0_reg, dut.final_inst.uu1_reg);
+          $display("uu2:  0x%016x  uu3: 0x%016x",
+                   dut.final_inst.uu2_reg, dut.final_inst.uu3_reg);
+        end
+
       $display("====================================================");
       $display("\n\n");
     end
@@ -267,6 +294,7 @@ module tb_poly1305_core();
       tb_clk      = 0;
       tb_debug    = 0;
       tb_pblock   = 0;
+      tb_final    = 0;
       tb_reset_n  = 1;
       tb_init     = 0;
       tb_next     = 0;
@@ -392,13 +420,14 @@ module tb_poly1305_core();
       tb_pblock = 0;
 
       $display("*** test_p1305_bytes16: running finish() to get the MAC.");
+      tb_final  = 1;
       tb_finish = 1;
       #(CLK_PERIOD);
       tb_finish = 0;
       wait_ready();
       $display("*** test_p1305_bytes16: finish() should be completed.");
-
-      #(4 * CLK_PERIOD);
+      #(CLK_PERIOD);
+      tb_final = 0;
       tb_debug = 0;
 
       $display("*** test_p1305_bytes16: Checking the generated MAC.");
