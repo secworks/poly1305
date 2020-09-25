@@ -446,6 +446,87 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
+  // test_p1305_bytes32;
+  //
+  // Test with 16 byte message. Key is from the RFC.
+  //----------------------------------------------------------------
+  task test_p1305_bytes32;
+    begin : test_p1305_bytes32
+      $display("*** test_p1305_bytes32 started.\n");
+      inc_tc_ctr();
+
+      tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
+      tb_block = 128'h0;
+
+      tb_debug  = 1;
+      tb_pblock = 1;
+      #(2 * CLK_PERIOD);
+
+      $display("*** test_p1305_bytes32: Running init() with the RFC key.");
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes32: init() should be completed.");
+      #(CLK_PERIOD);
+
+      $display("*** test_p1305_bytes32: Loading the first 16 bytes and running next().");
+      tb_block    = 128'h31323334_35363738_393a3b3c_3d3e3f40;
+      tb_blocklen = 5'h10;
+      tb_pblock   = 1;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes32: next() should be completed.");
+      #(CLK_PERIOD);
+      $display("*** test_p1305_bytes32: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
+      tb_pblock = 0;
+
+      $display("*** test_p1305_bytes32: Loading the final 16 bytes and running next().");
+      tb_block    = 128'h41424344_45464748_494a4b4c_4d4e4f50;
+      tb_blocklen = 5'h10;
+      tb_pblock   = 1;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes32: next() should be completed.");
+      #(CLK_PERIOD);
+      $display("*** test_p1305_bytes32: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
+      tb_pblock = 0;
+
+      $display("*** test_p1305_bytes32: running finish() to get the MAC.");
+      tb_final  = 1;
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes32: finish() should be completed.");
+      #(CLK_PERIOD);
+      tb_final = 0;
+      tb_debug = 0;
+
+      $display("*** test_p1305_bytes32: Checking the generated MAC.");
+      if (tb_mac == 128'hd76301a8_d0b1ef2b_60ca65f7_c565189d)
+        $display("*** test_p1305_bytes32: Correct MAC generated.");
+      else begin
+        $display("*** test_p1305_bytes32: Error. Incorrect MAC generated.");
+        $display("*** test_p1305_bytes32: Expected: 0xd76301a8_d0b1ef2b_60ca65f7_c565189d");
+        $display("*** test_p1305_bytes32: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** test_p1305_bytes32 completed.\n");
+    end
+  endtask // test_p1305_bytes32
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -460,8 +541,9 @@ module tb_poly1305_core();
 
       tb_pblock = 1;
 
-      test_rfc8439();
+      // test_rfc8439();
       test_p1305_bytes16();
+      test_p1305_bytes32();
 
       display_test_results();
 
