@@ -364,15 +364,84 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug = 1;
+      tb_debug  = 1;
+      tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
+      $display("*** test_rfc8439: Running init() with the RFC key.");
       tb_init = 1;
       #(CLK_PERIOD);
       tb_init = 0;
+      wait_ready();
+      $display("*** test_rfc8439: init() should be completed.");
+      #(CLK_PERIOD);
 
-      #(4 * CLK_PERIOD);
+      $display("*** test_rfc8439: Loading the first 16 bytes of message and running next().");
+      tb_block    = 128'h43727970_746f6772_61706869_6320466f;
+      tb_blocklen = 5'h10;
+      tb_pblock   = 1;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_rfc8439: next() should be completed.");
+      #(CLK_PERIOD);
+      $display("*** test_rfc8439: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
+      tb_pblock = 0;
+
+      $display("*** test_rfc8439: Loading the second 16 bytes and running next().");
+      tb_block    = 128'h72756d20_52657365_61726368_2047726f;
+      tb_blocklen = 5'h10;
+      tb_pblock   = 1;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_rfc8439: next() should be completed.");
+      #(CLK_PERIOD);
+      $display("*** test_rfc8439: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
+      tb_pblock = 0;
+
+      $display("*** test_rfc8439: Loading the final 2 bytes and running next().");
+      tb_block    = 128'h75700000_00000000_00000000_00000000;
+      tb_blocklen = 5'h02;
+      tb_pblock   = 1;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_rfc8439: next() should be completed.");
+      #(CLK_PERIOD);
+      $display("*** test_rfc8439: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
+      tb_pblock = 0;
+
+
+      $display("*** test_rfc8439: running finish() to get the MAC.");
+      tb_final  = 1;
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+      $display("*** test_rfc8439: finish() should be completed.");
+      #(CLK_PERIOD);
+      tb_final = 0;
       tb_debug = 0;
+
+      $display("*** test_rfc8439: Checking the generated MAC.");
+      if (tb_mac == 128'ha8061dc1_305136c6_c22b8baf_0c0127a9)
+        $display("*** test_rfc8439: Correct MAC generated.");
+      else begin
+        $display("*** test_rfc8439: Error. Incorrect MAC generated.");
+        $display("*** test_rfc8439: Expected: 0xa8061dc1_305136c6_c22b8baf_0c0127a9");
+        $display("*** test_rfc8439: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
 
       $display("*** test_rfc8439 completed.\n");
     end
@@ -393,7 +462,7 @@ module tb_poly1305_core();
       tb_block = 128'h0;
 
       tb_debug  = 1;
-      tb_pblock = 1;
+      tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
       $display("*** test_p1305_bytes16: Running init() with the RFC key.");
@@ -541,9 +610,9 @@ module tb_poly1305_core();
 
       tb_pblock = 1;
 
-      // test_rfc8439();
-      test_p1305_bytes16();
-      test_p1305_bytes32();
+      test_rfc8439();
+      // test_p1305_bytes16();
+      // test_p1305_bytes32();
 
       display_test_results();
 
