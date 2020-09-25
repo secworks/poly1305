@@ -87,8 +87,8 @@ module poly1305_mulacc(
   reg          ready_new;
   reg          ready_we;
 
-  reg [3 : 0]  mulacc_ctrl_reg;
-  reg [3 : 0]  mulacc_ctrl_new;
+  reg [2 : 0]  mulacc_ctrl_reg;
+  reg [2 : 0]  mulacc_ctrl_new;
   reg          mulacc_ctrl_we;
 
 
