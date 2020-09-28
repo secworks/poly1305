@@ -212,7 +212,7 @@ module poly1305(
                   finish_new = write_data[CTRL_FINISH_BIT];
                 end
 
-              if (ADDR_BLOCKLEN)
+              if (address == ADDR_BLOCKLEN)
                 blocklen_we = 1'h1;
 
               if ((address >= ADDR_KEY0) && (address <= ADDR_KEY7))
@@ -233,7 +233,7 @@ module poly1305(
               if (address == ADDR_VERSION)
                 tmp_read_data = CORE_VERSION;
 
-              if (ADDR_STATUS)
+              if (address == ADDR_STATUS)
                 tmp_read_data = {31'h0, ready_reg};
 
               if ((address >= ADDR_TAG0) && (address <= ADDR_TAG3))
