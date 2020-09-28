@@ -314,100 +314,66 @@ module poly1305_core(
 
       if (load_block)
         begin
-          if (blocklen == 5'h10)
-            begin
-              // Handling of full blocks.
-              c_new[0] = le(block[127 : 096]);
-              c_new[1] = le(block[095 : 064]);
-              c_new[2] = le(block[063 : 032]);
-              c_new[3] = le(block[031 : 000]);
-              c_new[4] = 32'h1;
-              c_we     = 1'h1;
-            end
-          else
+          if (blocklen < 5'h10)
             begin
               // Handling of partial (final) blocks.
               case (blocklen[3 : 0])
                 0: begin
-                  c_new[0] = 32'h0;
-                  c_new[1] = 32'h0;
-                  c_new[2] = 32'h0;
                   c_new[3] = 32'h1;
                 end
 
                 1: begin
-                  c_new[0] = 32'h0;
-                  c_new[1] = 32'h0;
-                  c_new[2] = 32'h0;
                   c_new[3] = 32'h0100 | le(block[127 : 096]);
                 end
 
                 2: begin
-                  c_new[3] = 32'h0;
-                  c_new[2] = 32'h0;
-                  c_new[1] = 32'h0;
                   c_new[0] = 32'h010000 | le(block[127 : 096]);
                 end
 
                 3: begin
-                  c_new[0] = 32'h0;
-                  c_new[1] = 32'h0;
-                  c_new[2] = 32'h0;
                   c_new[3] = 32'h01000000 | le(block[127 : 096]);
                 end
 
                 4: begin
-                  c_new[0] = 32'h0;
-                  c_new[1] = 32'h0;
                   c_new[2] = 32'h1;
                   c_new[3] = le(block[127 : 096]);
                 end
 
                 5: begin
-                  c_new[0] = 32'h0;
-                  c_new[1] = 32'h0;
                   c_new[2] = 32'h0100 | le(block[127 : 096]);
                   c_new[3] = le(block[095 : 064]);
                 end
 
                 6: begin
-                  c_new[0] = 32'h0;
-                  c_new[1] = 32'h0;
                   c_new[2] = 32'h010000 | le(block[127 : 096]);
                   c_new[3] = le(block[095 : 064]);
 
                 end
 
                 7: begin
-                  c_new[0] = 32'h0;
-                  c_new[1] = 32'h0;
                   c_new[2] = 32'h01000000 | le(block[127 : 096]);
                   c_new[3] = le(block[095 : 064]);
                 end
 
                 8: begin
-                  c_new[0] = 32'h0;
                   c_new[1] = 32'h1;
                   c_new[2] = le(block[127 : 096]);
                   c_new[3] = le(block[095 : 064]);
                 end
 
                 9: begin
-                  c_new[0] = 32'h0;
                   c_new[1] = 32'h0100 | le(block[127 : 096]);
                   c_new[2] = le(block[095 : 064]);
                   c_new[3] = le(block[063 : 032]);
                 end
 
                 10: begin
-                  c_new[0] = 32'h0;
                   c_new[1] = 32'h010000 | le(block[127 : 096]);
                   c_new[2] = le(block[095 : 064]);
                   c_new[3] = le(block[063 : 032]);
                 end
 
                 11: begin
-                  c_new[0] = 32'h0;
                   c_new[1] = 32'h01000000 | le(block[127 : 096]);
                   c_new[2] = le(block[095 : 064]);
                   c_new[3] = le(block[063 : 032]);
@@ -441,8 +407,17 @@ module poly1305_core(
                   c_new[3] = le(block[031 : 000]);
                 end
               endcase // case (blocklen[3 : 0])
-
               c_new[4] = 32'h0;
+              c_we     = 1'h1;
+            end
+          else
+            begin
+              // Handling of full blocks.
+              c_new[0] = le(block[127 : 096]);
+              c_new[1] = le(block[095 : 064]);
+              c_new[2] = le(block[063 : 032]);
+              c_new[3] = le(block[031 : 000]);
+              c_new[4] = 32'h1;
               c_we     = 1'h1;
             end
         end
