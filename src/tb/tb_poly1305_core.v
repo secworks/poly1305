@@ -1195,6 +1195,52 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
+  // testcase_8;
+  //
+  // Monocypher testcase 1. A full single block message that
+  // teest overflow in caclulations.
+  //----------------------------------------------------------------
+  task testcase_8;
+    begin : testcase_8
+      $display("*** testcase_8 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h02000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'hffffffff_ffffffff_ffffffff_ffffffff;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_8: Checking the generated MAC.");
+      if (tb_mac == 128'h03000000_00000000_00000000_00000000)
+        $display("*** testcase_8: Correct MAC generated.");
+      else begin
+        $display("*** testcase_8: Error. Incorrect MAC generated.");
+        $display("*** testcase_8: Expected: 0x03000000_00000000_00000000_00000000");
+        $display("*** testcase_8: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_8 completed.\n");
+    end
+  endtask // testcase_8
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -1219,9 +1265,10 @@ module tb_poly1305_core();
       // test_p1305_bytes15();
       // test_p1305_bytes16();
       // test_p1305_bytes32();
-      testcase_0();
-      testcase_1();
-      testcase_2();
+      // testcase_0();
+      // testcase_1();
+      // testcase_2();
+      testcase_8();
 
       display_test_results();
 

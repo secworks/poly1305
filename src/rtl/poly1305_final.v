@@ -63,7 +63,7 @@ module poly1305_final(
   //----------------------------------------------------------------
   // Parameters and symbolic values.
   //----------------------------------------------------------------
-  localparam PIPE_CYCLES    = 4'h0;
+  localparam PIPE_CYCLES    = 4'h6;
 
   localparam CTRL_IDLE      = 2'h0;
   localparam CTRL_PIPE_WAIT = 2'h1;
