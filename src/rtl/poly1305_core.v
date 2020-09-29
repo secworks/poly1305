@@ -319,9 +319,12 @@ module poly1305_core(
           s_we     = 1'h1;
         end
 
+      // Note that we only check bits 0..3 in blocklen.
+      // This means that a blocklen of 0 and 16 are
+      // handled the same way.
       if (load_block)
         begin
-          if (blocklen < 5'h10)
+          if (blocklen[3 : 0])
             begin
               // Handling of partial (final) blocks.
               case (blocklen[3 : 0])
@@ -482,8 +485,17 @@ module poly1305_core(
                 load_block             = 1'h1;
                 ready_new              = 1'h0;
                 ready_we               = 1'h1;
-                poly1305_core_ctrl_new = CTRL_NEXT;
-                poly1305_core_ctrl_we  = 1'h1;
+
+                if (blocklen > 0)
+                  begin
+                    poly1305_core_ctrl_new = CTRL_NEXT;
+                    poly1305_core_ctrl_we  = 1'h1;
+                  end
+                else
+                  begin
+                    poly1305_core_ctrl_new = CTRL_READY;
+                    poly1305_core_ctrl_we  = 1'h1;
+                  end
               end
 
             if (finish)
