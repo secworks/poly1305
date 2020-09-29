@@ -364,7 +364,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -461,7 +461,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -527,7 +527,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -593,7 +593,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -659,7 +659,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -725,7 +725,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -791,7 +791,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -857,7 +857,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -923,7 +923,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 0;
       #(2 * CLK_PERIOD);
 
@@ -989,7 +989,7 @@ module tb_poly1305_core();
       tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
       tb_block = 128'h0;
 
-      tb_debug  = 1;
+      tb_debug  = 0;
       tb_pblock = 1;
       #(2 * CLK_PERIOD);
 
@@ -1151,7 +1151,7 @@ module tb_poly1305_core();
   //----------------------------------------------------------------
   // testcase_2;
   //
-  // Monocypher testcase 1. A zero length message with lower
+  // Monocypher testcase 2. A zero length message with lower
   // part of key non zero.
   //----------------------------------------------------------------
   task testcase_2;
@@ -1197,8 +1197,8 @@ module tb_poly1305_core();
   //----------------------------------------------------------------
   // testcase_8;
   //
-  // Monocypher testcase 1. A full single block message that
-  // teest overflow in caclulations.
+  // Monocypher testcase 8. A full single block message that
+  // test overflow in final caclulations.
   //----------------------------------------------------------------
   task testcase_8;
     begin : testcase_8
@@ -1241,6 +1241,277 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
+  // testcase_9;
+  //
+  // Monocypher testcase 9. A full single block message that
+  // test overflow in caclulations in pblock.
+  //----------------------------------------------------------------
+  task testcase_9;
+    begin : testcase_9
+      $display("*** testcase_9 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h02000000_00000000_00000000_00000000_ffffffff_ffffffff_ffffffff_ffffffff;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'h02000000_00000000_00000000_00000000;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_9: Checking the generated MAC.");
+      if (tb_mac == 128'h03000000_00000000_00000000_00000000)
+        $display("*** testcase_9: Correct MAC generated.");
+      else begin
+        $display("*** testcase_9: Error. Incorrect MAC generated.");
+        $display("*** testcase_9: Expected: 0x03000000_00000000_00000000_00000000");
+        $display("*** testcase_9: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_9 completed.\n");
+    end
+  endtask // testcase_9
+
+
+  //----------------------------------------------------------------
+  // testcase_10;
+  //
+  // Monocypher testcase 10. Three full blocks that trigger lots
+  // of carry handling in calculations.
+  //----------------------------------------------------------------
+  task testcase_10;
+    begin : testcase_10
+      $display("*** testcase_10 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h01000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'hffffffff_ffffffff_ffffffff_ffffffff;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_block    = 128'hf0ffffff_ffffffff_ffffffff_ffffffff;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_block    = 128'h11000000_00000000_00000000_00000000;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_10: Checking the generated MAC.");
+      if (tb_mac == 128'h05000000_00000000_00000000_00000000)
+        $display("*** testcase_10: Correct MAC generated.");
+      else begin
+        $display("*** testcase_10: Error. Incorrect MAC generated.");
+        $display("*** testcase_10: Expected: 0x03000000_00000000_00000000_00000000");
+        $display("*** testcase_10: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_10 completed.\n");
+    end
+  endtask // testcase_10
+
+
+  //----------------------------------------------------------------
+  // testcase_11;
+  //
+  // Monocypher testcase 11. Three full blocks that trigger lots
+  // of carry handling in calculations.
+  //----------------------------------------------------------------
+  task testcase_11;
+    begin : testcase_11
+      $display("*** testcase_11 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h01000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'hffffffff_ffffffff_ffffffff_ffffffff;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_block    = 128'hfbfefefe_fefefefe_fefefefe_fefefefe;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_block    = 128'h01010101_01010101_01010101_01010101;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_11: Checking the generated MAC.");
+      if (tb_mac == 128'h00000000_00000000_00000000_00000000)
+        $display("*** testcase_11: Correct MAC generated.");
+      else begin
+        $display("*** testcase_11: Error. Incorrect MAC generated.");
+        $display("*** testcase_11: Expected: 0x03000000_00000000_00000000_00000000");
+        $display("*** testcase_11: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_11 completed.\n");
+    end
+  endtask // testcase_11
+
+
+  //----------------------------------------------------------------
+  // testcase_12;
+  //
+  // Monocypher testcase 12. A single block that triggers
+  // corner cases in calculations.
+  //----------------------------------------------------------------
+  task testcase_12;
+    begin : testcase_12
+      $display("*** testcase_12 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h02000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'hfdffffff_ffffffff_ffffffff_ffffffff;
+      tb_blocklen = 5'h10;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_12: Checking the generated MAC.");
+      if (tb_mac == 128'hfaffffff_ffffffff_ffffffff_ffffffff)
+        $display("*** testcase_12: Correct MAC generated.");
+      else begin
+        $display("*** testcase_12: Error. Incorrect MAC generated.");
+        $display("*** testcase_12: Expected: 0xfaffffff_ffffffff_ffffffff_ffffffff");
+        $display("*** testcase_12: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_12 completed.\n");
+    end
+  endtask // testcase_12
+
+
+  //----------------------------------------------------------------
+  // testcase_long;
+  //
+  // A testcase with a 1025 byte long message.
+  //----------------------------------------------------------------
+  task testcase_long;
+    begin : testcase_long
+      integer i;
+
+      $display("*** testcase_long started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'hf3000000_00000000_00000000_0000003f_3f000000_00000000_00000000_000000f3;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      for (i = 0 ; i < 34 ; i = i + 1)
+        begin
+          $display("*** testcase_long: Processing block %0d", i);
+          tb_block    = 128'hffffffff_ffffffff_ffffffff_ffffffff;
+          tb_blocklen = 5'h10;
+          tb_next     = 1;
+          #(CLK_PERIOD);
+          tb_next = 0;
+          wait_ready();
+        end
+
+      // $display("*** testcase_long: Processing final block");
+      // tb_block    = 128'h01000000_00000000_00000000_00000000;
+      // tb_blocklen = 5'h01;
+      // tb_next     = 1;
+      // #(CLK_PERIOD);
+      // tb_next = 0;
+      // wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_long: Checking the generated MAC.");
+      if (tb_mac == 128'hfaffffff_ffffffff_ffffffff_ffffffff)
+        $display("*** testcase_long: Correct MAC generated.");
+      else begin
+        $display("*** testcase_long: Error. Incorrect MAC generated.");
+        $display("*** testcase_long: Expected: 0xfaffffff_ffffffff_ffffffff_ffffffff");
+        $display("*** testcase_long: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_long completed.\n");
+    end
+  endtask // testcase_long
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -1255,20 +1526,25 @@ module tb_poly1305_core();
 
       tb_pblock = 1;
 
-      // test_rfc8439();
-      // test_p1305_bytes0();
-      // test_p1305_bytes1();
-      // test_p1305_bytes2();
-      // test_p1305_bytes6();
-      // test_p1305_bytes9();
-      // test_p1305_bytes12();
-      // test_p1305_bytes15();
-      // test_p1305_bytes16();
-      // test_p1305_bytes32();
-      // testcase_0();
-      // testcase_1();
-      // testcase_2();
-      testcase_8();
+      //test_rfc8439();
+      //test_p1305_bytes0();
+      //test_p1305_bytes1();
+      //test_p1305_bytes2();
+      //test_p1305_bytes6();
+      //test_p1305_bytes9();
+      //test_p1305_bytes12();
+      //test_p1305_bytes15();
+      //test_p1305_bytes16();
+      //test_p1305_bytes32();
+      //testcase_0();
+      //testcase_1();
+      //testcase_2();
+      //testcase_8();
+      //testcase_9();
+      //testcase_10();
+      //testcase_11();
+      //testcase_12();
+      testcase_long();
 
       display_test_results();
 

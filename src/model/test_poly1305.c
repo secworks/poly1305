@@ -116,7 +116,7 @@ int p1305_rfc8439() {
 //------------------------------------------------------------------
 // p1305_bytes0()
 //
-// Test with a single byte message. Key is from the RFC.
+// Test with a zero byte message. Key is from the RFC.
 // Se Section 2.5.2.
 //------------------------------------------------------------------
 int p1305_bytes0() {
@@ -128,8 +128,8 @@ int p1305_bytes0() {
 
   uint8_t my_message[1] = {0x00};
 
-  uint8_t my_expected[16] = {0x80, 0x97, 0xdd, 0xf5, 0x19, 0xb7, 0xf4, 0x12,
-                             0x0b, 0x57, 0xfa, 0xbf, 0x92, 0x5a, 0x19, 0xac};
+  uint8_t my_expected[16] = {0x01, 0x03, 0x80, 0x8a, 0xfb, 0x0d, 0xb2, 0xfd,
+                             0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49, 0xf5, 0x1b};
 
   uint8_t my_tag[16];
   crypto_poly1305_ctx my_ctx;
@@ -1198,39 +1198,73 @@ int testcase_15() {
 
 
 //------------------------------------------------------------------
+// testcase_long
+// Testcase with 1025 byte long message.
+//------------------------------------------------------------------
+int testcase_long() {
+  uint8_t my_key[32] = {0xf3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3f,
+                        0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf3};
+
+  uint8_t my_blocks[16] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                           0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+  uint8_t my_final[1] = {0x01};
+
+  uint8_t my_expected[16] = {0xdc, 0x09, 0x64, 0xe5, 0xce, 0x9c, 0xd7, 0xd9,
+                             0xa7, 0x57, 0x1f, 0xaf, 0xa5, 0xdc, 0x04, 0x73};
+
+  uint8_t my_tag[16];
+  crypto_poly1305_ctx my_ctx;
+
+  crypto_poly1305_init(&my_ctx, &my_key[0]);
+
+  for (int i = 0 ; i < 34 ; i++)
+    crypto_poly1305_update(&my_ctx, &my_blocks[0], 16);
+
+  //  crypto_poly1305_update(&my_ctx, &my_final[0], 1);
+
+  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  return check_tag(&my_tag[0], &my_expected[0]);
+}
+
+
+//------------------------------------------------------------------
 //------------------------------------------------------------------
 void run_tests() {
   int test_result = 0;
 
-  //  test_result += p1305_bytes0();
-  //  test_result += p1305_bytes1();
-  //  test_result += p1305_bytes2();
-  //  test_result += p1305_bytes6();
-  //  test_result += p1305_bytes9();
-  //  test_result += p1305_bytes12();
-  //  test_result += p1305_bytes15();
-  //  test_result += p1305_bytes16();
-  //  test_result += p1305_bytes17();
-  //  test_result += p1305_bytes32();
-  //  test_result += p1305_rfc8439();
-  //  test_result += p1305_test1();
-  //  test_result += p1305_test2();
+  test_result += p1305_bytes0();
+  test_result += p1305_bytes1();
+  test_result += p1305_bytes2();
+  test_result += p1305_bytes6();
+  test_result += p1305_bytes9();
+  test_result += p1305_bytes12();
+  test_result += p1305_bytes15();
+  test_result += p1305_bytes16();
+  test_result += p1305_bytes17();
+  test_result += p1305_bytes32();
+  test_result += p1305_rfc8439();
+  test_result += p1305_test1();
+  test_result += p1305_test2();
   test_result += testcase_0();
   test_result += testcase_1();
   test_result += testcase_2();
-  //  test_result += testcase_3();
-  //  test_result += testcase_4();
-  //  test_result += testcase_5();
-  //  test_result += testcase_6();
-  //  test_result += testcase_7();
-  //  test_result += testcase_8();
-  //  test_result += testcase_9();
-  //  test_result += testcase_10();
-  //  test_result += testcase_11();
-  //  test_result += testcase_12();
-  //  test_result += testcase_13();
-  //  test_result += testcase_14();
-  //  test_result += testcase_15();
+  test_result += testcase_3();
+  test_result += testcase_4();
+  test_result += testcase_5();
+  test_result += testcase_6();
+  test_result += testcase_7();
+  test_result += testcase_8();
+  test_result += testcase_9();
+  test_result += testcase_10();
+  test_result += testcase_11();
+  test_result += testcase_12();
+  test_result += testcase_13();
+  test_result += testcase_14();
+  test_result += testcase_15();
+  test_result += testcase_long();
 
   printf("Number of failing test cases: %d\n", test_result);
 }
