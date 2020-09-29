@@ -1207,7 +1207,7 @@ void run_tests() {
   //  test_result += p1305_bytes2();
   //  test_result += p1305_bytes6();
   //  test_result += p1305_bytes9();
-  test_result += p1305_bytes12();
+  //  test_result += p1305_bytes12();
   //  test_result += p1305_bytes15();
   //  test_result += p1305_bytes16();
   //  test_result += p1305_bytes17();
@@ -1215,9 +1215,9 @@ void run_tests() {
   //  test_result += p1305_rfc8439();
   //  test_result += p1305_test1();
   //  test_result += p1305_test2();
-  //  test_result += testcase_0();
-  //  test_result += testcase_1();
-  //  test_result += testcase_2();
+  test_result += testcase_0();
+  test_result += testcase_1();
+  test_result += testcase_2();
   //  test_result += testcase_3();
   //  test_result += testcase_4();
   //  test_result += testcase_5();

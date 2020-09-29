@@ -1058,6 +1058,143 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
+  // testcase_0;
+  //
+  // Monocypher testcase 0. An all zero zero length testcase.
+  //----------------------------------------------------------------
+  task testcase_0;
+    begin : testcase_0
+      $display("*** testcase_0 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h0;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'h00000000_00000000_00000000_00000000;
+      tb_blocklen = 5'h00;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_0: Checking the generated MAC.");
+      if (tb_mac == 128'h0)
+        $display("*** testcase_0: Correct MAC generated.");
+      else begin
+        $display("*** testcase_0: Error. Incorrect MAC generated.");
+        $display("*** testcase_0: Expected: 0x00000000_00000000_00000000_00000000");
+        $display("*** testcase_0: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_0 completed.\n");
+    end
+  endtask // testcase_0
+
+
+  //----------------------------------------------------------------
+  // testcase_1;
+  //
+  // Monocypher testcase 1. A zero length message with upper
+  // part of key non zero.
+  //----------------------------------------------------------------
+  task testcase_1;
+    begin : testcase_1
+      $display("*** testcase_1 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h36e5f6b5_c5e06070_f0efca96_227a863e_00000000_00000000_00000000_00000000;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'h00000000_00000000_00000000_00000000;
+      tb_blocklen = 5'h00;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_1: Checking the generated MAC.");
+      if (tb_mac == 128'h0)
+        $display("*** testcase_1: Correct MAC generated.");
+      else begin
+        $display("*** testcase_1: Error. Incorrect MAC generated.");
+        $display("*** testcase_1: Expected: 0x00000000_00000000_00000000_00000000");
+        $display("*** testcase_1: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_1 completed.\n");
+    end
+  endtask // testcase_1
+
+
+  //----------------------------------------------------------------
+  // testcase_2;
+  //
+  // Monocypher testcase 1. A zero length message with lower
+  // part of key non zero.
+  //----------------------------------------------------------------
+  task testcase_2;
+    begin : testcase_2
+      $display("*** testcase_2 started.");
+      inc_tc_ctr();
+
+      tb_key   = 256'h00000000_00000000_00000000_00000000_36e5f6b5_c5e06070_f0efca96_227a863e;
+      tb_block = 128'h0;
+
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+
+      tb_block    = 128'h00000000_00000000_00000000_00000000;
+      tb_blocklen = 5'h00;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+
+      $display("*** testcase_2: Checking the generated MAC.");
+      if (tb_mac == 128'h36e5f6b5_c5e06070_f0efca96_227a863e)
+        $display("*** testcase_2: Correct MAC generated.");
+      else begin
+        $display("*** testcase_2: Error. Incorrect MAC generated.");
+        $display("*** testcase_2: Expected: 0x36e5f6b5_c5e06070_f0efca96_227a863e");
+        $display("*** testcase_2: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** testcase_2 completed.\n");
+    end
+  endtask // testcase_2
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -1078,10 +1215,13 @@ module tb_poly1305_core();
       // test_p1305_bytes2();
       // test_p1305_bytes6();
       // test_p1305_bytes9();
-      test_p1305_bytes12();
+      // test_p1305_bytes12();
       // test_p1305_bytes15();
       // test_p1305_bytes16();
       // test_p1305_bytes32();
+      testcase_0();
+      testcase_1();
+      testcase_2();
 
       display_test_results();
 
