@@ -449,6 +449,138 @@ module tb_poly1305_core();
 
 
   //----------------------------------------------------------------
+  // test_p1305_bytes1;
+  //
+  // Test with 1 byte message. Key is from the RFC.
+  //----------------------------------------------------------------
+  task test_p1305_bytes1;
+    begin : test_p1305_bytes1
+      $display("*** test_p1305_bytes1 started.\n");
+      inc_tc_ctr();
+
+      tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
+      tb_block = 128'h0;
+
+      tb_debug  = 1;
+      tb_pblock = 0;
+      #(2 * CLK_PERIOD);
+
+      $display("*** test_p1305_bytes1: Running init() with the RFC key.");
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes1: init() should be completed.");
+      #(CLK_PERIOD);
+
+      $display("*** test_p1305_bytes1: Loading the 1 byte message and running next().");
+      tb_block    = 128'h31000000_00000000_00000000_00000000;
+      tb_blocklen = 5'h01;
+      tb_pblock   = 1;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes1: next() should be completed.");
+      #(CLK_PERIOD);
+      $display("*** test_p1305_bytes1: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
+      tb_pblock = 0;
+
+      $display("*** test_p1305_bytes1: running finish() to get the MAC.");
+      tb_final  = 1;
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes1: finish() should be completed.");
+      #(CLK_PERIOD);
+      tb_final = 0;
+      tb_debug = 0;
+
+      $display("*** test_p1305_bytes1: Checking the generated MAC.");
+      if (tb_mac == 128'h8097ddf5_19b7f412_0b57fabf_925a19ac)
+        $display("*** test_p1305_bytes1: Correct MAC generated.");
+      else begin
+        $display("*** test_p1305_bytes1: Error. Incorrect MAC generated.");
+        $display("*** test_p1305_bytes1: Expected: 0x8097ddf5_19b7f412_0b57fabf_925a19ac");
+        $display("*** test_p1305_bytes1: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** test_p1305_bytes1 completed.\n");
+    end
+  endtask // test_p1305_bytes1
+
+
+  //----------------------------------------------------------------
+  // test_p1305_bytes15;
+  //
+  // Test with 15 byte message. Key is from the RFC.
+  //----------------------------------------------------------------
+  task test_p1305_bytes15;
+    begin : test_p1305_bytes15
+      $display("*** test_p1305_bytes15 started.\n");
+      inc_tc_ctr();
+
+      tb_key   = 256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b;
+      tb_block = 128'h0;
+
+      tb_debug  = 1;
+      tb_pblock = 0;
+      #(2 * CLK_PERIOD);
+
+      $display("*** test_p1305_bytes15: Running init() with the RFC key.");
+      tb_init = 1;
+      #(CLK_PERIOD);
+      tb_init = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes15: init() should be completed.");
+      #(CLK_PERIOD);
+
+      $display("*** test_p1305_bytes15: Loading the 16 byte message and running next().");
+      tb_block    = 128'h31323334_35363738_393a3b3c_3d3e3f00;
+      tb_blocklen = 5'h0f;
+      tb_pblock   = 1;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes15: next() should be completed.");
+      #(CLK_PERIOD);
+      $display("*** test_p1305_bytes15: Dumping state after next().");
+      dump_dut_state();
+      #(CLK_PERIOD);
+      tb_pblock = 0;
+
+      $display("*** test_p1305_bytes15: running finish() to get the MAC.");
+      tb_final  = 1;
+      tb_finish = 1;
+      #(CLK_PERIOD);
+      tb_finish = 0;
+      wait_ready();
+      $display("*** test_p1305_bytes15: finish() should be completed.");
+      #(CLK_PERIOD);
+      tb_final = 0;
+      tb_debug = 0;
+
+      $display("*** test_p1305_bytes15: Checking the generated MAC.");
+      if (tb_mac == 128'h9c222589_184ef089_a06b50be_e4c9c124)
+        $display("*** test_p1305_bytes15: Correct MAC generated.");
+      else begin
+        $display("*** test_p1305_bytes15: Error. Incorrect MAC generated.");
+        $display("*** test_p1305_bytes15: Expected: 0x9c222589_184ef089_a06b50be_e4c9c124");
+        $display("*** test_p1305_bytes15: Got:      0x%032x", tb_mac);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** test_p1305_bytes15 completed.\n");
+    end
+  endtask // test_p1305_bytes15
+
+
+  //----------------------------------------------------------------
   // test_p1305_bytes16;
   //
   // Test with 16 byte message. Key is from the RFC.
@@ -610,7 +742,9 @@ module tb_poly1305_core();
 
       tb_pblock = 1;
 
-      test_rfc8439();
+      // test_rfc8439();
+      // test_p1305_bytes1();
+      // test_p1305_bytes15();
       // test_p1305_bytes16();
       // test_p1305_bytes32();
 

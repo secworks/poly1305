@@ -271,6 +271,10 @@ module poly1305_core(
   always @*
     begin : poly1305_core_logic
       integer i;
+      reg [31 : 0] b0;
+      reg [31 : 0] b1;
+      reg [31 : 0] b2;
+      reg [31 : 0] b3;
 
       for (i = 0 ; i < 5 ; i = i + 1)
         h_new[i] = 32'h0;
@@ -292,6 +296,10 @@ module poly1305_core(
         mac_new[i] = 32'h0;
       mac_we = 1'h0;
 
+      b0 = le(block[031 : 000]);
+      b1 = le(block[063 : 032]);
+      b2 = le(block[095 : 064]);
+      b3 = le(block[127 : 096]);
 
       if (state_init)
         begin
@@ -311,7 +319,6 @@ module poly1305_core(
           s_we     = 1'h1;
         end
 
-
       if (load_block)
         begin
           if (blocklen < 5'h10)
@@ -319,92 +326,91 @@ module poly1305_core(
               // Handling of partial (final) blocks.
               case (blocklen[3 : 0])
                 0: begin
-                  c_new[3] = 32'h1;
+                  c_new[0] = 32'h1;
                 end
 
                 1: begin
-                  c_new[3] = 32'h0100 | le(block[127 : 096]);
+                  c_new[0] = {24'h1, b3[7 : 0]};
                 end
 
                 2: begin
-                  c_new[0] = 32'h010000 | le(block[127 : 096]);
+                  c_new[0] = {16'h1, b3[15 : 0]};
                 end
 
                 3: begin
-                  c_new[3] = 32'h01000000 | le(block[127 : 096]);
+                  c_new[0] = {8'h1, b3[23 : 0]};
                 end
 
                 4: begin
-                  c_new[2] = 32'h1;
-                  c_new[3] = le(block[127 : 096]);
+                  c_new[0] = b3;
+                  c_new[1] = 32'h1;
                 end
 
                 5: begin
-                  c_new[2] = 32'h0100 | le(block[127 : 096]);
-                  c_new[3] = le(block[095 : 064]);
+                  c_new[0] = b3;
+                  c_new[1] = {24'h1, b2[7 : 0]};
                 end
 
                 6: begin
-                  c_new[2] = 32'h010000 | le(block[127 : 096]);
-                  c_new[3] = le(block[095 : 064]);
-
+                  c_new[0] = b3;
+                  c_new[1] = {16'h1, b2[15 : 0]};
                 end
 
                 7: begin
-                  c_new[2] = 32'h01000000 | le(block[127 : 096]);
-                  c_new[3] = le(block[095 : 064]);
+                  c_new[0] = b3;
+                  c_new[1] = {8'h1, b2[23 : 0]};
                 end
 
                 8: begin
-                  c_new[1] = 32'h1;
-                  c_new[2] = le(block[127 : 096]);
-                  c_new[3] = le(block[095 : 064]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = 32'h1;
                 end
 
                 9: begin
-                  c_new[1] = 32'h0100 | le(block[127 : 096]);
-                  c_new[2] = le(block[095 : 064]);
-                  c_new[3] = le(block[063 : 032]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = {24'h1, b1[7 : 0]};
                 end
 
                 10: begin
-                  c_new[1] = 32'h010000 | le(block[127 : 096]);
-                  c_new[2] = le(block[095 : 064]);
-                  c_new[3] = le(block[063 : 032]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = {16'h1, b1[15 : 0]};
                 end
 
                 11: begin
-                  c_new[1] = 32'h01000000 | le(block[127 : 096]);
-                  c_new[2] = le(block[095 : 064]);
-                  c_new[3] = le(block[063 : 032]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = {8'h1, b1[23 : 0]};
                 end
 
                 12: begin
-                  c_new[0] = 32'h1;
-                  c_new[1] = le(block[127 : 096]);
-                  c_new[2] = le(block[095 : 064]);
-                  c_new[3] = le(block[063 : 032]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = b1;
+                  c_new[3] = 32'h1;
                 end
 
                 13: begin
-                  c_new[0] = 32'h0100 | le(block[127 : 096]);
-                  c_new[1] = le(block[095 : 064]);
-                  c_new[2] = le(block[063 : 032]);
-                  c_new[3] = le(block[031 : 000]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = b1;
+                  c_new[3] = {24'h1, b0[7 : 0]};
                 end
 
                 14: begin
-                  c_new[0] = 32'h010000 | le(block[127 : 096]);
-                  c_new[1] = le(block[095 : 064]);
-                  c_new[2] = le(block[063 : 032]);
-                  c_new[3] = le(block[031 : 000]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = b1;
+                  c_new[3] = {16'h1, b0[15 : 0]};
                 end
 
                 15: begin
-                  c_new[0] = 32'h01000000 | le(block[127 : 096]);
-                  c_new[1] = le(block[095 : 064]);
-                  c_new[2] = le(block[063 : 032]);
-                  c_new[3] = le(block[031 : 000]);
+                  c_new[0] = b3;
+                  c_new[1] = b2;
+                  c_new[2] = b1;
+                  c_new[3] = {8'h1, b0[23 : 0]};
                 end
               endcase // case (blocklen[3 : 0])
               c_new[4] = 32'h0;
