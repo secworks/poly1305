@@ -163,51 +163,51 @@ int p1305_bytes1() {
 
 
 //------------------------------------------------------------------
-// p1305_bytes17()
+// p1305_bytes15()
 //
-// Test with a 17 byte message. Key is from the RFC.
+// Test with a 15 byte message. The key is from the RFC.
 // Se Section 2.5.2.
 //------------------------------------------------------------------
-int p1305_bytes17() {
+int p1305_bytes15() {
 
   uint8_t my_key[32] = {0x85, 0xd6, 0xbe, 0x78, 0x57, 0x55, 0x6d, 0x33,
                         0x7f, 0x44, 0x52, 0xfe, 0x42, 0xd5, 0x06, 0xa8,
                         0x01, 0x03, 0x80, 0x8a, 0xfb, 0x0d, 0xb2, 0xfd,
                         0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49, 0xf5, 0x1b};
 
-  uint8_t my_message[17] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
-                            0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
-                            0x41};
+  uint8_t my_message[16] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
+                            0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f};
 
-  uint8_t my_expected[16] = {0x49, 0x3c, 0x3f, 0x56, 0x14, 0xe3, 0x27, 0x84,
-                             0x11, 0x1e, 0xf3, 0x9e, 0x12, 0x42, 0x14, 0xb5};
+  uint8_t my_expected[16] = {0x9c, 0x22, 0x25, 0x89, 0x18, 0x4e, 0xf0, 0x89,
+                             0xa0, 0x6b, 0x50, 0xbe, 0xe4, 0xc9, 0xc1, 0x24};
+
 
   uint8_t my_tag[16];
   crypto_poly1305_ctx my_ctx;
 
   int res;
 
-  printf("\nTest p1305_bytes17 started.\n");
+  printf("\nTest p1305_bytes15 started.\n");
 
-  printf("Test p1305_bytes17: Calling poly1305_init()\n");
+  printf("Test p1305_bytes15: Calling poly1305_init()\n");
   crypto_poly1305_init(&my_ctx, &my_key[0]);
   printf("Test p1305_byte1: Context after poly1305_init()\n");
   print_context(&my_ctx);
 
-  printf("Test p1305_bytes17: Calling poly1305_update() with 17 byte message.\n");
-  crypto_poly1305_update(&my_ctx, &my_message[0], 17);
-  printf("Test p1305_bytes17: Context after poly1305_update()\n");
+  printf("Test p1305_bytes15: Calling poly1305_update() with 15 byte message.\n");
+  crypto_poly1305_update(&my_ctx, &my_message[0], 15);
+  printf("Test p1305_bytes15: Context after poly1305_update()\n");
   print_context(&my_ctx);
 
-  printf("Test p1305_bytes17: Calling poly1305_final() to get tag.\n");
+  printf("Test p1305_bytes15: Calling poly1305_final() to get tag.\n");
   crypto_poly1305_final(&my_ctx, &my_tag[0]);
-  printf("Test p1305_bytes17: Context after poly1305_final()\n");
+  printf("Test p1305_bytes15: Context after poly1305_final()\n");
   print_context(&my_ctx);
-  printf("Test p1305_bytes17: The generated tag:\n");
+  printf("Test p1305_bytes15: The generated tag:\n");
   print_hexdata(&my_tag[0], 16);
 
   res = check_tag(&my_tag[0], &my_expected[0]);
-  printf("Test p1305_bytes17 completed.\n");
+  printf("Test p1305_bytes15 completed.\n");
   return res;
 }
 
@@ -257,6 +257,56 @@ int p1305_bytes16() {
 
   res = check_tag(&my_tag[0], &my_expected[0]);
   printf("Test p1305_bytes16 completed.\n");
+  return res;
+}
+
+
+//------------------------------------------------------------------
+// p1305_bytes17()
+//
+// Test with a 17 byte message. Key is from the RFC.
+// Se Section 2.5.2.
+//------------------------------------------------------------------
+int p1305_bytes17() {
+
+  uint8_t my_key[32] = {0x85, 0xd6, 0xbe, 0x78, 0x57, 0x55, 0x6d, 0x33,
+                        0x7f, 0x44, 0x52, 0xfe, 0x42, 0xd5, 0x06, 0xa8,
+                        0x01, 0x03, 0x80, 0x8a, 0xfb, 0x0d, 0xb2, 0xfd,
+                        0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49, 0xf5, 0x1b};
+
+  uint8_t my_message[17] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
+                            0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f, 0x40,
+                            0x41};
+
+  uint8_t my_expected[16] = {0x49, 0x3c, 0x3f, 0x56, 0x14, 0xe3, 0x27, 0x84,
+                             0x11, 0x1e, 0xf3, 0x9e, 0x12, 0x42, 0x14, 0xb5};
+
+  uint8_t my_tag[16];
+  crypto_poly1305_ctx my_ctx;
+
+  int res;
+
+  printf("\nTest p1305_bytes17 started.\n");
+
+  printf("Test p1305_bytes17: Calling poly1305_init()\n");
+  crypto_poly1305_init(&my_ctx, &my_key[0]);
+  printf("Test p1305_byte1: Context after poly1305_init()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_bytes17: Calling poly1305_update() with 17 byte message.\n");
+  crypto_poly1305_update(&my_ctx, &my_message[0], 17);
+  printf("Test p1305_bytes17: Context after poly1305_update()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_bytes17: Calling poly1305_final() to get tag.\n");
+  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  printf("Test p1305_bytes17: Context after poly1305_final()\n");
+  print_context(&my_ctx);
+  printf("Test p1305_bytes17: The generated tag:\n");
+  print_hexdata(&my_tag[0], 16);
+
+  res = check_tag(&my_tag[0], &my_expected[0]);
+  printf("Test p1305_bytes17 completed.\n");
   return res;
 }
 
@@ -379,6 +429,9 @@ int p1305_test1() {
 
 
 //------------------------------------------------------------------
+// testcase_0
+// All zero key.
+// Zero length message.
 //------------------------------------------------------------------
 int testcase_0() {
   uint8_t my_key[32] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -402,6 +455,9 @@ int testcase_0() {
 
 
 //------------------------------------------------------------------
+// testcase_1
+// Upper part of key non-zero.
+// Zero length message.
 //------------------------------------------------------------------
 int testcase_1() {
   uint8_t my_key[32] = {0x36, 0xe5, 0xf6, 0xb5, 0xc5, 0xe0, 0x60, 0x70,
@@ -425,12 +481,14 @@ int testcase_1() {
 
 
 //------------------------------------------------------------------
+// Lower part of key non-zero.
+// Zero length message.
 //------------------------------------------------------------------
 int testcase_2() {
   uint8_t my_key[32] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                              0x36, 0xe5, 0xf6, 0xb5, 0xc5, 0xe0, 0x60, 0x70,
-                              0xf0, 0xef, 0xca, 0x96, 0x22, 0x7a, 0x86, 0x3e};
+                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x36, 0xe5, 0xf6, 0xb5, 0xc5, 0xe0, 0x60, 0x70,
+                        0xf0, 0xef, 0xca, 0x96, 0x22, 0x7a, 0x86, 0x3e};
 
   uint8_t my_message[0] = {};
 
@@ -894,29 +952,30 @@ int testcase_15() {
 void run_tests() {
   int test_result = 0;
 
-  //  test_result += p1305_rfc8439();
-  // test_result += p1305_bytes1();
+  //  test_result += p1305_bytes1();
+  //  test_result += p1305_bytes15();
   //  test_result += p1305_bytes16();
-    test_result += p1305_bytes32();
-  // test_result += p1305_bytes17();
-//  test_result += p1305_test1();
-//  test_result += p1305_test2();
-//  test_result += testcase_0();
-//  test_result += testcase_1();
-//  test_result += testcase_2();
-//  test_result += testcase_3();
-//  test_result += testcase_4();
-//  test_result += testcase_5();
-//  test_result += testcase_6();
-//  test_result += testcase_7();
-//  test_result += testcase_8();
-//  test_result += testcase_9();
-//  test_result += testcase_10();
-//  test_result += testcase_11();
-//  test_result += testcase_12();
-//  test_result += testcase_13();
-//  test_result += testcase_14();
-//  test_result += testcase_15();
+  //  test_result += p1305_bytes17();
+  //  test_result += p1305_bytes32();
+  //  test_result += p1305_rfc8439();
+  //  test_result += p1305_test1();
+  //  test_result += p1305_test2();
+  //  test_result += testcase_0();
+  //  test_result += testcase_1();
+  //  test_result += testcase_2();
+  //  test_result += testcase_3();
+  //  test_result += testcase_4();
+  //  test_result += testcase_5();
+  //  test_result += testcase_6();
+  //  test_result += testcase_7();
+  //  test_result += testcase_8();
+  //  test_result += testcase_9();
+  //  test_result += testcase_10();
+  //  test_result += testcase_11();
+  //  test_result += testcase_12();
+  //  test_result += testcase_13();
+  //  test_result += testcase_14();
+  //  test_result += testcase_15();
 
   printf("Number of failing test cases: %d\n", test_result);
 }
