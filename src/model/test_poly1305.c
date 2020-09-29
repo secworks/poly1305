@@ -311,6 +311,57 @@ int p1305_bytes6() {
 
 
 //------------------------------------------------------------------
+// p1305_bytes9()
+//
+// Test with a nine byte message. Key is from the RFC.
+// Se Section 2.5.2.
+//------------------------------------------------------------------
+int p1305_bytes9() {
+
+  uint8_t my_key[32] = {0x85, 0xd6, 0xbe, 0x78, 0x57, 0x55, 0x6d, 0x33,
+                        0x7f, 0x44, 0x52, 0xfe, 0x42, 0xd5, 0x06, 0xa8,
+                        0x01, 0x03, 0x80, 0x8a, 0xfb, 0x0d, 0xb2, 0xfd,
+                        0x4a, 0xbf, 0xf6, 0xaf, 0x41, 0x49, 0xf5, 0x1b};
+
+  uint8_t my_message[9] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
+                           0x39};
+
+  uint8_t my_expected[16] = {0xba, 0x5f, 0x90, 0x4c, 0x52, 0x38, 0xc9, 0x97,
+                             0xa4, 0x44, 0x6b, 0x82, 0xe9, 0x7e, 0x22, 0xd3};
+
+
+  uint8_t my_tag[16];
+  crypto_poly1305_ctx my_ctx;
+
+  int res;
+
+  printf("\nTest p1305_bytes9 started.\n");
+
+  printf("Test p1305_bytes9: Calling poly1305_init()\n");
+  crypto_poly1305_init(&my_ctx, &my_key[0]);
+  printf("Test p1305_bytes9: Context after poly1305_init()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_bytes9: Calling poly1305_update() with nine byte message.\n");
+  crypto_poly1305_update(&my_ctx, &my_message[0], 9);
+  printf("Test p1305_bytes9: Context after poly1305_update()\n");
+  print_context(&my_ctx);
+
+  printf("Test p1305_bytes9: Calling poly1305_final() to get tag.\n");
+  crypto_poly1305_final(&my_ctx, &my_tag[0]);
+  printf("Test p1305_bytes9: Context after poly1305_final()\n");
+  print_context(&my_ctx);
+  printf("Test p1305_bytes9: The generated tag:\n");
+  print_hexdata(&my_tag[0], 16);
+
+  res = check_tag(&my_tag[0], &my_expected[0]);
+  printf("Test p1305_bytes9 completed.\n");
+
+  return res;
+}
+
+
+//------------------------------------------------------------------
 // p1305_bytes15()
 //
 // Test with a 15 byte message. The key is from the RFC.
@@ -1103,7 +1154,8 @@ void run_tests() {
   //  test_result += p1305_bytes0();
   //  test_result += p1305_bytes1();
   //  test_result += p1305_bytes2();
-  test_result += p1305_bytes6();
+  //  test_result += p1305_bytes6();
+  test_result += p1305_bytes9();
   //  test_result += p1305_bytes15();
   //  test_result += p1305_bytes16();
   //  test_result += p1305_bytes17();
