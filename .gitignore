@@ -6,7 +6,8 @@ test_poly1305
 ## Log files
 *.log
 
-## Tooruns subdirs
+## Toolruns subdirs
 /toolruns/quartus
+/toolruns/ise/
 /toolruns/vivado
 /toolruns/modelsim
