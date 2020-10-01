@@ -69,10 +69,14 @@ module poly1305(
   localparam ADDR_KEY7        = 8'h17;
 
   localparam ADDR_BLOCK0      = 8'h20;
+  localparam ADDR_BLOCK0      = 8'h21;
+  localparam ADDR_BLOCK0      = 8'h22;
   localparam ADDR_BLOCK3      = 8'h23;
 
-  localparam ADDR_TAG0        = 8'h30;
-  localparam ADDR_TAG3        = 8'h33;
+  localparam ADDR_MAC0        = 8'h30;
+  localparam ADDR_MAC1        = 8'h31;
+  localparam ADDR_MAC2        = 8'h32;
+  localparam ADDR_MAC3        = 8'h33;
 
   localparam CORE_NAME0       = 32'h706f6c79; // "poly"
   localparam CORE_NAME1       = 32'h31333035; // "1305"
@@ -236,8 +240,8 @@ module poly1305(
               if (address == ADDR_STATUS)
                 tmp_read_data = {31'h0, ready_reg};
 
-              if ((address >= ADDR_TAG0) && (address <= ADDR_TAG3))
-                tmp_read_data = core_mac[(3 - (address - ADDR_TAG0)) * 32 +: 32];
+              if ((address >= ADDR_MAC0) && (address <= ADDR_MAC3))
+                tmp_read_data = core_mac[(3 - (address - ADDR_MAC0)) * 32 +: 32];
             end
         end
     end // addr_decoder

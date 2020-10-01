@@ -56,12 +56,12 @@ module tb_poly1305();
   localparam ADDR_CTRL        = 8'h08;
   localparam CTRL_INIT_BIT    = 0;
   localparam CTRL_NEXT_BIT    = 1;
-  localparam CTRL_FINAL_BIT   = 2;
+  localparam CTRL_FINISH_BIT  = 2;
 
   localparam ADDR_STATUS      = 8'h09;
   localparam STATUS_READY_BIT = 0;
 
-  localparam ADDR_FINAL_SIZE  = 8'h0b;
+  localparam ADDR_BLOCKLEN    = 8'h0a;
 
   localparam ADDR_KEY0        = 8'h10;
   localparam ADDR_KEY1        = 8'h11;
@@ -77,10 +77,10 @@ module tb_poly1305();
   localparam ADDR_BLOCK2      = 8'h22;
   localparam ADDR_BLOCK3      = 8'h23;
 
-  localparam ADDR_RESULT0     = 8'h30;
-  localparam ADDR_RESULT1     = 8'h31;
-  localparam ADDR_RESULT2     = 8'h32;
-  localparam ADDR_RESULT3     = 8'h33;
+  localparam ADDR_MAC0        = 8'h30;
+  localparam ADDR_MAC1        = 8'h31;
+  localparam ADDR_MAC2        = 8'h32;
+  localparam ADDR_MAC3        = 8'h33;
 
 
   //----------------------------------------------------------------
@@ -92,7 +92,7 @@ module tb_poly1305();
   reg           tc_correct;
 
   reg [31 : 0]  read_data;
-  reg [127 : 0] result_data;
+  reg [127 : 0] result_mac;
 
   reg           tb_clk;
   reg           tb_reset_n;
@@ -256,43 +256,17 @@ module tb_poly1305();
 
 
   //----------------------------------------------------------------
-  // write_word()
+  // wait_ready()
   //
-  // Write the given word to the DUT using the DUT interface.
+  // Wait for the ready flag to be set in dut.
   //----------------------------------------------------------------
-  task write_word(input [11 : 0] address,
-                  input [31 : 0] word);
-    begin
-      if (DEBUG)
-        begin
-          $display("*** Writing 0x%08x to 0x%02x.", word, address);
-          $display("");
-        end
-
-      tb_address = address;
-      tb_write_data = word;
-      tb_cs = 1;
-      tb_we = 1;
-      #(2 * CLK_PERIOD);
-      tb_cs = 0;
-      tb_we = 0;
+  task wait_ready;
+    begin : wready
+      read_word(ADDR_STATUS);
+      while (read_data == 0)
+        read_word(ADDR_STATUS);
     end
-  endtask // write_word
-
-
-  //----------------------------------------------------------------
-  // write_block()
-  //
-  // Write the given block to the dut.
-  //----------------------------------------------------------------
-  task write_block(input [127 : 0] block);
-    begin
-      write_word(ADDR_BLOCK0, block[127  :  96]);
-      write_word(ADDR_BLOCK1, block[95   :  64]);
-      write_word(ADDR_BLOCK2, block[63   :  32]);
-      write_word(ADDR_BLOCK3, block[31   :   0]);
-    end
-  endtask // write_block
+  endtask // wait_ready
 
 
   //----------------------------------------------------------------
@@ -321,67 +295,55 @@ module tb_poly1305();
 
 
   //----------------------------------------------------------------
-  // read_block()
-  //
-  // Read the result block in the dut.
+  // read_mac()
   //----------------------------------------------------------------
-  task read_block;
+  task read_mac;
     begin
-      read_word(ADDR_BLOCK0);
-      result_data[127 : 096] = read_data;
-      read_word(ADDR_BLOCK1);
-      result_data[095 : 064] = read_data;
-      read_word(ADDR_BLOCK2);
-      result_data[063 : 032] = read_data;
-      read_word(ADDR_BLOCK3);
-      result_data[031 : 000] = read_data;
+      read_word(ADDR_MAC0);
+      result_mac[127 : 096] = read_data;
+      read_word(ADDR_MAC1);
+      result_mac[095 : 064] = read_data;
+      read_word(ADDR_MAC2);
+      result_mac[063 : 032] = read_data;
+      read_word(ADDR_MAC3);
+      result_mac[031 : 000] = read_data;
     end
-  endtask // read_block
+  endtask
 
 
   //----------------------------------------------------------------
-  // wait_ready()
+  // write_word()
   //
-  // Wait for the ready flag to be set in dut.
+  // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task wait_ready;
-    begin : wready
-      read_word(ADDR_STATUS);
-      while (read_data == 0)
-        read_word(ADDR_STATUS);
-    end
-  endtask // wait_ready
-
-
-  //----------------------------------------------------------------
-  // read_result()
-  //
-  // Read the result block in the dut.
-  //----------------------------------------------------------------
-  task read_result;
-    begin
-      read_word(ADDR_RESULT0);
-      result_data[127 : 096] = read_data;
-      read_word(ADDR_RESULT1);
-      result_data[095 : 064] = read_data;
-      read_word(ADDR_RESULT2);
-      result_data[063 : 032] = read_data;
-      read_word(ADDR_RESULT3);
-      result_data[031 : 000] = read_data;
-    end
-  endtask // read_result
-
-
-  //----------------------------------------------------------------
-  // set_key()
-  //
-  // set the key in the dut by writing the given key.
-  //----------------------------------------------------------------
-  task set_key(input [255 : 0] key);
+  task write_word(input [11 : 0] address,
+                  input [31 : 0] word);
     begin
       if (DEBUG)
         begin
-          $display("Writing key to the DUT: 0x%032x", key);
+          $display("*** Writing 0x%08x to 0x%02x.", word, address);
+          $display("");
+        end
+
+      tb_address = address;
+      tb_write_data = word;
+      tb_cs = 1;
+      tb_we = 1;
+      #(2 * CLK_PERIOD);
+      tb_cs = 0;
+      tb_we = 0;
+    end
+  endtask // write_word
+
+
+  //----------------------------------------------------------------
+  // write_key()
+  //----------------------------------------------------------------
+  task write_key(input [255 : 0] key);
+    begin
+      if (DEBUG)
+        begin
+          $display("Writing key to the DUT: 0x%064x", key);
         end
 
       write_word(ADDR_KEY0, key[255  : 224]);
@@ -393,7 +355,100 @@ module tb_poly1305();
       write_word(ADDR_KEY6, key[63   :  32]);
       write_word(ADDR_KEY7, key[31   :   0]);
     end
-  endtask // init_key
+  endtask // write_key
+
+
+  //----------------------------------------------------------------
+  // write_block()
+  //----------------------------------------------------------------
+  task write_block(input [127 : 0] block);
+    begin
+      if (DEBUG)
+        begin
+          $display("Writing block to the DUT: 0x%032x", key);
+        end
+
+      write_word(ADDR_BLOCK0, block[127  :  96]);
+      write_word(ADDR_BLOCK1, block[95   :  64]);
+      write_word(ADDR_BLOCK2, block[63   :  32]);
+      write_word(ADDR_BLOCK3, block[31   :   0]);
+    end
+  endtask // write_block
+
+
+  //----------------------------------------------------------------
+  // check_mac
+  //----------------------------------------------------------------
+  task check_mac(input [127 : 0] expected);
+    begin
+      read_mac();
+
+      if (result_mac == expected)
+        $display("*** test_rfc8439: Correct MAC generated.");
+      else begin
+        $display("*** test_rfc8439: Error. Incorrect MAC generated.");
+        $display("*** test_rfc8439: Expected: 0x%032x", expected);
+        $display("*** test_rfc8439: Got:      0x%032x", result_mac);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // check_mac
+
+
+  //----------------------------------------------------------------
+  // test_rfc8439;
+  //
+  // Test case that uses the test vectors from RFC 8439,
+  // section 2.5.2:
+  // https://tools.ietf.org/html/rfc8439#section-2.5.2
+  //----------------------------------------------------------------
+  task test_rfc8439;
+    begin : test_rfc8439
+      $display("*** test_rfc8439 started.");
+      inc_tc_ctr();
+
+      write_key(256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b);
+      write_block(128'h0);
+
+      $display("*** test_rfc8439: Running init() with the RFC key.");
+      write_word(ADDR_CTRL, CTRL_INIT_BIT);
+      wait_ready();
+      $display("*** test_rfc8439: init() should be completed.");
+
+      $display("*** test_rfc8439: Loading the first 16 bytes of message and running next().");
+      write_block(128'h43727970_746f6772_61706869_6320466f);
+      write_word(ADDR_BLOCKLEN, 32'h10);
+      write_word(ADDR_CTRL, CTRL_NEXT_BIT);
+      wait_ready();
+      $display("*** test_rfc8439: next() should be completed.");
+
+      $display("*** test_rfc8439: Loading the second 16 bytes and running next().");
+      write_block(128'h72756d20_52657365_61726368_2047726f);
+      write_word(ADDR_BLOCKLEN, 32'h10);
+      write_word(ADDR_CTRL, CTRL_NEXT_BIT);
+      wait_ready();
+      $display("*** test_rfc8439: next() should be completed.");
+
+
+      $display("*** test_rfc8439: Loading the final 2 bytes and running next().");
+      write_block(128'h75700000_00000000_00000000_00000000);
+      write_word(ADDR_BLOCKLEN, 32'h2);
+      write_word(ADDR_CTRL, CTRL_NEXT_BIT);
+      wait_ready();
+      $display("*** test_rfc8439: next() should be completed.");
+
+
+      $display("*** test_rfc8439: running finish() to get the MAC.");
+      write_word(ADDR_CTRL, CTRL_FINISH_BIT);
+      wait_ready();
+      $display("*** test_rfc8439: finish() should be completed.");
+
+      $display("*** test_rfc8439: Checking the generated MAC.");
+      check_mac(128'ha8061dc1_305136c6_c22b8baf_0c0127a9);
+
+      $display("*** test_rfc8439 completed.\n");
+    end
+  endtask // test_rfc8439
 
 
   //----------------------------------------------------------------
@@ -407,6 +462,9 @@ module tb_poly1305();
       $display("");
 
       init_sim();
+
+      test_rfc8439();
+
       display_test_results();
 
       $display("*** Testbench for poly1305 done ***");
