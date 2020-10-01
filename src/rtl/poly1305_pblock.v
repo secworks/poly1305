@@ -69,7 +69,7 @@ module poly1305_pblock(
   //----------------------------------------------------------------
   // Parameters and symbolic values.
   //----------------------------------------------------------------
-  localparam PRE_CYCLES  = 4'h2;
+  localparam PRE_CYCLES  = 4'h1;
   localparam POST_CYCLES = 4'h2;
 
   localparam CTRL_IDLE      = 4'h0;
