@@ -1464,6 +1464,10 @@ module tb_poly1305_core();
       $display("*** testcase_long started.");
       inc_tc_ctr();
 
+      tb_debug    = 1;
+      tb_pblock   = 1;
+      tb_final    = 1;
+
       tb_key   = 256'hf3000000_00000000_00000000_0000003f_3f000000_00000000_00000000_000000f3;
       tb_block = 128'h0;
 
@@ -1491,10 +1495,15 @@ module tb_poly1305_core();
       // tb_next = 0;
       // wait_ready();
 
+      $display("*** testcase_long: Running finish()");
       tb_finish = 1;
       #(CLK_PERIOD);
       tb_finish = 0;
       wait_ready();
+
+      tb_debug    = 0;
+      tb_pblock   = 0;
+      tb_final    = 0;
 
       $display("*** testcase_long: Checking the generated MAC.");
       if (tb_mac == 128'hfaffffff_ffffffff_ffffffff_ffffffff)

@@ -389,7 +389,6 @@ module tb_poly1305_pblock();
   endtask // test_rfc8349
 
 
-
   //----------------------------------------------------------------
   // test_p1305_bytes16;
   //
@@ -476,6 +475,90 @@ module tb_poly1305_pblock();
 
 
   //----------------------------------------------------------------
+  // test_long_block;
+  //
+  // Test case that uses the inputs to the final block in
+  // testcase_long (in core) to debug u4.
+  //----------------------------------------------------------------
+  task test_long_block;
+    begin : test_long_block
+      $display("*** test_long_block started.\n");
+
+      tc_ctr = tc_ctr + 1;
+      incorrect = 0;
+
+      tb_r0 = 32'h000000f3;
+      tb_r1 = 32'h00000000;
+      tb_r2 = 32'h00000000;
+      tb_r3 = 32'h0f000000;
+
+      tb_h0 = 32'h938f36f3;
+      tb_h1 = 32'h9ca98eca;
+      tb_h2 = 32'h0743b558;
+      tb_h3 = 32'hb0851037;
+      tb_h4 = 32'h00000002;
+
+      tb_c0 = 32'hffffffff;
+      tb_c1 = 32'hffffffff;
+      tb_c2 = 32'hffffffff;
+      tb_c3 = 32'hffffffff;
+      tb_c4 = 32'h00000001;
+
+      tb_debug = 1;
+      #(2 * CLK_PERIOD);
+
+      tb_start = 1;
+      #(1 * CLK_PERIOD);
+      tb_start = 0;
+      wait_ready();
+
+      #(2 * CLK_PERIOD);
+      tb_debug = 0;
+
+      $display("*** test_long_block: DUT should be done.");
+      #(2 * CLK_PERIOD);
+
+      if (tb_h0_new != 32'h673fea88)
+        begin
+          $display("Error in h0. Expected: 0x673fea88. Got: 0x%08x\n", tb_h0_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h1_new != 32'hf26bf57f)
+        begin
+          $display("Error in h1. Expected: 0xf26bf57f. Got: 0x%08x\n", tb_h1_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h2_new != 32'hed0d58a4)
+        begin
+          $display("Error in h2. Expected: 0xed0d58a4. Got: 0x%08x\n", tb_h2_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h3_new != 32'h143c232b)
+        begin
+          $display("Error in h3. Expected: 0x143c232b. Got: 0x%08x\n", tb_h3_new);
+          incorrect = incorrect + 1;
+        end
+
+      if (tb_h4_new != 32'h00000004)
+        begin
+          $display("Error in h4. Expected: 0x00000004. Got: 0x%08x\n", tb_h4_new);
+          incorrect = incorrect + 1;
+        end
+
+      tb_debug = 0;
+
+      if (!incorrect)
+        $display("*** test_long_block successfully completed.\n");
+      else
+        $display("*** test_long_block completed with %d errors.\n", incorrect);
+    end
+  endtask // test_long_block
+
+
+  //----------------------------------------------------------------
   // poly1305_pblock_test
   //----------------------------------------------------------------
   initial
@@ -490,6 +573,7 @@ module tb_poly1305_pblock();
       // test_aa();
       test_rfc8349();
       test_p1305_bytes16();
+      test_long_block();
 
       display_test_result();
 
