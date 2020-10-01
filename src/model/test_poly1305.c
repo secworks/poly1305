@@ -1220,12 +1220,13 @@ int testcase_long() {
 
   crypto_poly1305_init(&my_ctx, &my_key[0]);
 
-  for (int i = 0 ; i < 34 ; i++){
-    printf("testcase_long: Processingg block %d\n", i);
+  for (int i = 0 ; i < 64 ; i++){
+    printf("testcase_long: Processing block %d\n", i);
     crypto_poly1305_update(&my_ctx, &my_blocks[0], 16);
   }
 
-  //  crypto_poly1305_update(&my_ctx, &my_final[0], 1);
+  printf("testcase_long: Processing final single byte block\n");
+  crypto_poly1305_update(&my_ctx, &my_final[0], 1);
 
   printf("testcase_long: Starting final processing\n");
   crypto_poly1305_final(&my_ctx, &my_tag[0]);

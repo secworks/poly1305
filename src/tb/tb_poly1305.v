@@ -90,6 +90,9 @@ module tb_poly1305();
   reg [31 : 0]  read_data;
   reg [127 : 0] result_mac;
 
+  reg           tb_debug;
+  reg           tb_core_state;
+
   reg           tb_clk;
   reg           tb_reset_n;
   reg           tb_cs;
@@ -97,7 +100,6 @@ module tb_poly1305();
   reg [7  : 0]  tb_address;
   reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
-  reg           tb_debug;
 
 
   //----------------------------------------------------------------
@@ -163,6 +165,26 @@ module tb_poly1305();
       $display("block:    0x%032x", dut.core_block);
       $display("blocklen: 0x%02x", dut.blocklen_reg);
       $display("mac:      0x%032x", dut.core_mac);
+
+      if (tb_core_state)
+        begin
+          $display("");
+          $display("Internal state:");
+          $display("---------------");
+          $display("r:     0x%08x_%08x_%08x_%08x",
+                   dut.core.r_reg[0], dut.core.r_reg[1],
+                   dut.core.r_reg[2], dut.core.r_reg[3]);
+          $display("h:     0x%08x_%08x_%08x_%08x_%08x",
+                   dut.core.h_reg[0], dut.core.h_reg[1], dut.core.h_reg[2],
+                   dut.core.h_reg[3], dut.core.h_reg[4]);
+          $display("c:     0x%08x_%08x_%08x_%08x_%08x",
+                   dut.core.c_reg[0], dut.core.c_reg[1], dut.core.c_reg[2],
+                   dut.core.c_reg[3], dut.core.c_reg[4]);
+          $display("s:     0x%08x_%08x_%08x_%08x",
+                   dut.core.s_reg[0], dut.core.s_reg[1],
+                   dut.core.s_reg[2], dut.core.s_reg[3]);
+        end
+
       $display("================================================================");
       $display("");
     end
@@ -217,7 +239,7 @@ module tb_poly1305();
       error_ctr     = 0;
       tc_ctr        = 0;
       tb_debug      = 0;
-
+      tb_core_state = 0;
       tb_clk        = 0;
       tb_reset_n    = 1;
 
@@ -543,6 +565,57 @@ module tb_poly1305();
 
 
   //----------------------------------------------------------------
+  // test_long;
+  //----------------------------------------------------------------
+  task test_long;
+    begin : test_long
+      integer i;
+
+      $display("*** test_long started.");
+      inc_tc_ctr();
+
+      tb_debug      = 0;
+      tb_core_state = 0;
+
+      write_key(256'hf3000000_00000000_00000000_0000003f_3f000000_00000000_00000000_000000f3);
+      write_block(128'h0);
+
+      $display("*** test_long: Running init() with the RFC key.");
+      write_word(ADDR_CTRL, (32'h1 << CTRL_INIT_BIT));
+      wait_ready();
+
+      $display("*** test_long: Processing 64 complete blocks.");
+      write_block(128'hffffffff_ffffffff_ffffffff_ffffffff);
+      write_word(ADDR_BLOCKLEN, 32'h10);
+      for (i = 0 ; i < 64 ; i = i + 1)
+        begin
+          $display("*** testcase_long: Processing block %0d", i);
+          write_word(ADDR_CTRL, (32'h1 << CTRL_NEXT_BIT));
+          wait_ready();
+        end
+
+      $display("*** test_long: Processing the final single byte block.");
+      write_block(128'h01000000_00000000_00000000_00000000);
+      write_word(ADDR_BLOCKLEN, 32'h1);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_NEXT_BIT));
+      wait_ready();
+
+      $display("*** test_long: running finish() to get the MAC.");
+      write_word(ADDR_CTRL, (32'h1 << CTRL_FINISH_BIT));
+      wait_ready();
+
+      $display("*** test_long: Checking the generated MAC.");
+      check_mac(128'hdc0964e5ce9cd7d9a7571fafa5dc0473);
+
+      tb_debug      = 0;
+      tb_core_state = 0;
+
+      $display("*** test_long completed.\n");
+    end
+  endtask // test_long
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -556,9 +629,10 @@ module tb_poly1305();
 
       reset_dut();
 
-      test_bytes0();
-      test_bytes1();
-      test_rfc8439();
+      // test_bytes0();
+      // test_bytes1();
+      // test_rfc8439();
+      test_long();
 
       display_test_results();
 

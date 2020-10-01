@@ -1461,12 +1461,12 @@ module tb_poly1305_core();
     begin : testcase_long
       integer i;
 
+      tb_debug  = 1;
+      tb_pblock = 1;
+      tb_final  = 1;
+
       $display("*** testcase_long started.");
       inc_tc_ctr();
-
-      tb_debug    = 1;
-      tb_pblock   = 1;
-      tb_final    = 1;
 
       tb_key   = 256'hf3000000_00000000_00000000_0000003f_3f000000_00000000_00000000_000000f3;
       tb_block = 128'h0;
@@ -1476,7 +1476,7 @@ module tb_poly1305_core();
       tb_init = 0;
       wait_ready();
 
-      for (i = 0 ; i < 34 ; i = i + 1)
+      for (i = 0 ; i < 64 ; i = i + 1)
         begin
           $display("*** testcase_long: Processing block %0d", i);
           tb_block    = 128'hffffffff_ffffffff_ffffffff_ffffffff;
@@ -1487,13 +1487,13 @@ module tb_poly1305_core();
           wait_ready();
         end
 
-      // $display("*** testcase_long: Processing final block");
-      // tb_block    = 128'h01000000_00000000_00000000_00000000;
-      // tb_blocklen = 5'h01;
-      // tb_next     = 1;
-      // #(CLK_PERIOD);
-      // tb_next = 0;
-      // wait_ready();
+      $display("*** testcase_long: Processing final block");
+      tb_block    = 128'h01000000_00000000_00000000_00000000;
+      tb_blocklen = 5'h01;
+      tb_next     = 1;
+      #(CLK_PERIOD);
+      tb_next = 0;
+      wait_ready();
 
       $display("*** testcase_long: Running finish()");
       tb_finish = 1;
@@ -1501,12 +1501,8 @@ module tb_poly1305_core();
       tb_finish = 0;
       wait_ready();
 
-      tb_debug    = 0;
-      tb_pblock   = 0;
-      tb_final    = 0;
-
       $display("*** testcase_long: Checking the generated MAC.");
-      if (tb_mac == 128'hfaffffff_ffffffff_ffffffff_ffffffff)
+      if (tb_mac == 128'hdc0964e5ce9cd7d9a7571fafa5dc0473)
         $display("*** testcase_long: Correct MAC generated.");
       else begin
         $display("*** testcase_long: Error. Incorrect MAC generated.");
@@ -1514,6 +1510,10 @@ module tb_poly1305_core();
         $display("*** testcase_long: Got:      0x%032x", tb_mac);
         error_ctr = error_ctr + 1;
       end
+
+      tb_debug  = 0;
+      tb_pblock = 0;
+      tb_final  = 0;
 
       $display("*** testcase_long completed.\n");
     end
@@ -1535,24 +1535,24 @@ module tb_poly1305_core();
 
       tb_pblock = 1;
 
-      //test_rfc8439();
-      //test_p1305_bytes0();
-      //test_p1305_bytes1();
-      //test_p1305_bytes2();
-      //test_p1305_bytes6();
-      //test_p1305_bytes9();
-      //test_p1305_bytes12();
-      //test_p1305_bytes15();
-      //test_p1305_bytes16();
-      //test_p1305_bytes32();
-      //testcase_0();
-      //testcase_1();
-      //testcase_2();
-      //testcase_8();
-      //testcase_9();
-      //testcase_10();
-      //testcase_11();
-      //testcase_12();
+      test_rfc8439();
+      test_p1305_bytes0();
+      test_p1305_bytes1();
+      test_p1305_bytes2();
+      test_p1305_bytes6();
+      test_p1305_bytes9();
+      test_p1305_bytes12();
+      test_p1305_bytes15();
+      test_p1305_bytes16();
+      test_p1305_bytes32();
+      testcase_0();
+      testcase_1();
+      testcase_2();
+      testcase_8();
+      testcase_9();
+      testcase_10();
+      testcase_11();
+      testcase_12();
       testcase_long();
 
       display_test_results();
