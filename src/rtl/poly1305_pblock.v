@@ -89,8 +89,8 @@ module poly1305_pblock(
   reg [63 : 0] u2_new;
   reg [63 : 0] u3_reg;
   reg [63 : 0] u3_new;
-  reg [63 : 0] u4_reg;
-  reg [63 : 0] u4_new;
+  reg [31 : 0] u4_reg;
+  reg [31 : 0] u4_new;
   reg [63 : 0] u5_reg;
   reg [63 : 0] u5_new;
 
@@ -155,7 +155,7 @@ module poly1305_pblock(
   assign h1_new  = u1_reg[31 : 0];
   assign h2_new  = u2_reg[31 : 0];
   assign h3_new  = u3_reg[31 : 0];
-  assign h4_new  = u4_reg[31 : 0];
+  assign h4_new  = u4_reg;
 
 
   //----------------------------------------------------------------
@@ -259,7 +259,7 @@ module poly1305_pblock(
           u1_reg          <= 64'h0;
           u2_reg          <= 64'h0;
           u3_reg          <= 64'h0;
-          u4_reg          <= 64'h0;
+          u4_reg          <= 32'h0;
           u5_reg          <= 64'h0;
           cycle_ctr_reg   <= 4'h0;
           ready_reg       <= 1'h1;
