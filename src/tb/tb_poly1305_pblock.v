@@ -571,8 +571,8 @@ module tb_poly1305_pblock();
       dump_dut_state();
 
       // test_aa();
-      test_rfc8349();
-      test_p1305_bytes16();
+      // test_rfc8349();
+      // test_p1305_bytes16();
       test_long_block();
 
       display_test_result();

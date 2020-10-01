@@ -330,7 +330,7 @@ module poly1305_pblock(
       u1_new = u0_reg[63 : 32] + x1_new[31 : 0] + x0_new[63 : 32];
       u2_new = u1_reg[63 : 32] + x2_new[31 : 0] + x1_new[63 : 32];
       u3_new = u2_reg[63 : 32] + x3_new[31 : 0] + x2_new[63 : 32];
-      u4_new = u3_reg[63 : 32] + u5_reg & 32'h3;
+      u4_new = u3_reg[63 : 32] + (u5_reg & 32'h3);
     end // pblock_logic
 
 
