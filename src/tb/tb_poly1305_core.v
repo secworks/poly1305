@@ -1461,9 +1461,9 @@ module tb_poly1305_core();
     begin : testcase_long
       integer i;
 
-      tb_debug  = 1;
-      tb_pblock = 1;
-      tb_final  = 1;
+      tb_debug  = 0;
+      tb_pblock = 0;
+      tb_final  = 0;
 
       $display("*** testcase_long started.");
       inc_tc_ctr();

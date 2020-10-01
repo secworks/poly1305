@@ -534,7 +534,9 @@ module poly1305_core(
             if (final_ready)
               begin
                 mac_update             = 1'h1;
-                poly1305_core_ctrl_new = CTRL_READY;
+                ready_new              = 1'h1;
+                ready_we               = 1'h1;
+                poly1305_core_ctrl_new = CTRL_IDLE;
                 poly1305_core_ctrl_we  = 1'h1;
               end
           end

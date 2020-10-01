@@ -629,9 +629,9 @@ module tb_poly1305();
 
       reset_dut();
 
-      // test_bytes0();
-      // test_bytes1();
-      // test_rfc8439();
+      test_bytes0();
+      test_bytes1();
+      test_rfc8439();
       test_long();
 
       display_test_results();
