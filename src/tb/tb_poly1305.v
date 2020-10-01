@@ -388,11 +388,11 @@ module tb_poly1305();
       read_mac();
 
       if (result_mac == expected)
-        $display("*** test_rfc8439: Correct MAC generated.");
+        $display("*** check_mac: Correct MAC generated.");
       else begin
-        $display("*** test_rfc8439: Error. Incorrect MAC generated.");
-        $display("*** test_rfc8439: Expected: 0x%032x", expected);
-        $display("*** test_rfc8439: Got:      0x%032x", result_mac);
+        $display("*** check_mac: Error. Incorrect MAC generated.");
+        $display("*** check_mac: Expected: 0x%032x", expected);
+        $display("*** check_mac: Got:      0x%032x", result_mac);
         error_ctr = error_ctr + 1;
       end
     end
@@ -411,7 +411,7 @@ module tb_poly1305();
       $display("*** test_rfc8439 started.");
       inc_tc_ctr();
 
-      tb_debug = 1;
+      tb_debug = 0;
 
       write_key(256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b);
       write_block(128'h0);
@@ -460,6 +460,89 @@ module tb_poly1305();
 
 
   //----------------------------------------------------------------
+  // test_bytes0;
+  // Zero byte length message testcase.
+  //----------------------------------------------------------------
+  task test_bytes0;
+    begin : test_bytes0
+      $display("*** test_bytes0 started.");
+      inc_tc_ctr();
+
+      tb_debug = 0;
+
+      write_key(256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b);
+      write_block(128'h0);
+
+      $display("*** test_bytes0: Running init() with the RFC key.");
+      write_word(ADDR_CTRL, (32'h1 << CTRL_INIT_BIT));
+      wait_ready();
+      $display("*** test_bytes0: init() should be completed.");
+
+      $display("*** test_bytes0: Loading the zero byte message and running next().");
+      write_block(128'h00000000_00000000_00000000_00000000);
+      write_word(ADDR_BLOCKLEN, 32'h0);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_NEXT_BIT));
+      wait_ready();
+      $display("*** test_bytes1: next() should be completed.");
+
+      $display("*** test_bytes0: running finish() to get the MAC.");
+      write_word(ADDR_CTRL, (32'h1 << CTRL_FINISH_BIT));
+      wait_ready();
+      $display("*** test_bytes0: finish() should be completed.");
+
+      $display("*** test_bytes0: Checking the generated MAC.");
+      check_mac(128'h0103808afb0db2fd4abff6af4149f51b);
+
+      tb_debug = 0;
+
+      $display("*** test_bytes0 completed.\n");
+    end
+  endtask // test_bytes0
+
+
+  //----------------------------------------------------------------
+  // test_bytes1;
+  //
+  // Single byte message testcase.
+  //----------------------------------------------------------------
+  task test_bytes1;
+    begin : test_bytes1
+      $display("*** test_bytes1 started.");
+      inc_tc_ctr();
+
+      tb_debug = 0;
+
+      write_key(256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b);
+      write_block(128'h0);
+
+      $display("*** test_bytes1: Running init() with the RFC key.");
+      write_word(ADDR_CTRL, (32'h1 << CTRL_INIT_BIT));
+      wait_ready();
+      $display("*** test_bytes1: init() should be completed.");
+
+      $display("*** test_bytes1: Loading the one byte message and running next().");
+      write_block(128'h31000000_00000000_00000000_00000000);
+      write_word(ADDR_BLOCKLEN, 32'h1);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_NEXT_BIT));
+      wait_ready();
+      $display("*** test_bytes1: next() should be completed.");
+
+      $display("*** test_bytes1: running finish() to get the MAC.");
+      write_word(ADDR_CTRL, (32'h1 << CTRL_FINISH_BIT));
+      wait_ready();
+      $display("*** test_bytes1: finish() should be completed.");
+
+      $display("*** test_bytes1: Checking the generated MAC.");
+      check_mac(128'h8097ddf5_19b7f412_0b57fabf_925a19ac);
+
+      tb_debug = 0;
+
+      $display("*** test_bytes1 completed.\n");
+    end
+  endtask // test_bytes1
+
+
+  //----------------------------------------------------------------
   // main
   //
   // The main test functionality.
@@ -473,6 +556,8 @@ module tb_poly1305();
 
       reset_dut();
 
+      test_bytes0();
+      test_bytes1();
       test_rfc8439();
 
       display_test_results();
