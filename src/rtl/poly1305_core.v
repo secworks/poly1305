@@ -306,6 +306,7 @@ module poly1305_core(
           c_we     = 1'h1;
           h_we     = 1'h1;
 
+          // Clamping of the key when assigning r.
           r_new[0] = le(key[255 : 224]) & 32'h0fffffff;
           r_new[1] = le(key[223 : 192]) & 32'h0ffffffc;
           r_new[2] = le(key[191 : 160]) & 32'h0ffffffc;
@@ -324,7 +325,7 @@ module poly1305_core(
       // handled the same way.
       if (load_block)
         begin
-          if (blocklen[3 : 0])
+          if (blocklen[3 : 0] > 0)
             begin
               // Handling of partial (final) blocks.
               case (blocklen[3 : 0])
@@ -422,10 +423,10 @@ module poly1305_core(
           else
             begin
               // Handling of full blocks.
-              c_new[0] = le(block[127 : 096]);
-              c_new[1] = le(block[095 : 064]);
-              c_new[2] = le(block[063 : 032]);
-              c_new[3] = le(block[031 : 000]);
+              c_new[0] = b3;
+              c_new[1] = b2;
+              c_new[2] = b1;
+              c_new[3] = b0;
               c_new[4] = 32'h1;
               c_we     = 1'h1;
             end

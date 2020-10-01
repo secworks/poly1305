@@ -305,11 +305,11 @@ module poly1305_pblock(
   always @*
     begin : pblock_logic
       // s = h + c, no carry propagation.
-      s0_new = h0 + c0;
-      s1_new = h1 + c1;
-      s2_new = h2 + c2;
-      s3_new = h3 + c3;
-      s4_new = h4 + c4;
+      s0_new = {32'h0, h0} + {32'h0, c0};
+      s1_new = {32'h0, h1} + {32'h0, c1};
+      s2_new = {32'h0, h2} + {32'h0, c2};
+      s3_new = {32'h0, h3} + {32'h0, c3};
+      s4_new = {32'h0, h4} + {32'h0, c4};
 
 
       // Multiply r.
@@ -325,12 +325,12 @@ module poly1305_pblock(
 
 
       // partial reduction modulo 2^130 - 5
-      u5_new = (x4_reg + {32'h0, x3_new[63 : 32]});
+      u5_new = x4_reg + {32'h0, x3_new[63 : 32]};
       u0_new = ({2'h0, u5_reg[31 : 2]} * 5) + {32'h0, x0_new[31 : 0]};
-      u1_new = u0_reg[63 : 32] + x1_new[31 : 0] + x0_new[63 : 32];
-      u2_new = u1_reg[63 : 32] + x2_new[31 : 0] + x1_new[63 : 32];
-      u3_new = u2_reg[63 : 32] + x3_new[31 : 0] + x2_new[63 : 32];
-      u4_new = u3_reg[63 : 32] + (u5_reg & 32'h3);
+      u1_new = {32'h0, u0_reg[63 : 32]} + {32'h0, x1_new[31 : 0]} + {32'h0, x0_new[63 : 32]};
+      u2_new = {32'h0, u1_reg[63 : 32]} + {32'h0, x2_new[31 : 0]} + {32'h0, x1_new[63 : 32]};
+      u3_new = {32'h0, u2_reg[63 : 32]} + {32'h0, x3_new[31 : 0]} + {32'h0, x2_new[63 : 32]};
+      u4_new = u3_reg[63 : 32] + {30'h0, (u5_reg[1 : 0] & 2'h3)};
     end // pblock_logic
 
 
