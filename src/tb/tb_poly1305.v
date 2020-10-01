@@ -41,12 +41,8 @@ module tb_poly1305();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam DEBUG = 0;
-
-
   localparam CLK_HALF_PERIOD = 1;
   localparam CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
-
 
   // The DUT address map.
   localparam ADDR_NAME0       = 8'h00;
@@ -101,6 +97,7 @@ module tb_poly1305();
   reg [7  : 0]  tb_address;
   reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
+  reg           tb_debug;
 
 
   //----------------------------------------------------------------
@@ -141,7 +138,7 @@ module tb_poly1305();
 
       #(CLK_PERIOD);
 
-      if (DEBUG)
+      if (tb_debug)
         begin
           dump_dut_state();
         end
@@ -155,12 +152,18 @@ module tb_poly1305();
   //----------------------------------------------------------------
   task dump_dut_state;
     begin
+      $display("");
+      $display("================================================================");
       $display("cycle:  0x%016x", cycle_ctr);
-      $display("ctrl:   init_reg = 0x%01x, next_reg = 0x%01x, finish_reg = 0x%01x",
+      $display("DUT internals:");
+      $display("ctrl:     init_reg = 0x%01x, next_reg = 0x%01x, finish_reg = 0x%01x",
                dut.init_reg, dut.next_reg, dut.finish_reg);
-      $display("ready = 0x%01x", dut.core_ready);
-      $display("block:  0x%08x%08x%08x%08x",
-               dut.block_reg[0], dut.block_reg[1], dut.block_reg[2], dut.block_reg[3]);
+      $display("ready:    0x%01x", dut.core_ready);
+      $display("key:      0x%064x", dut.core_key);
+      $display("block:    0x%032x", dut.core_block);
+      $display("blocklen: 0x%02x", dut.blocklen_reg);
+      $display("mac:      0x%032x", dut.core_mac);
+      $display("================================================================");
       $display("");
     end
   endtask // dump_dut_state
@@ -213,6 +216,7 @@ module tb_poly1305();
       cycle_ctr     = 0;
       error_ctr     = 0;
       tc_ctr        = 0;
+      tb_debug      = 0;
 
       tb_clk        = 0;
       tb_reset_n    = 1;
@@ -285,7 +289,7 @@ module tb_poly1305();
       read_data = tb_read_data;
       tb_cs = 0;
 
-      if (DEBUG)
+      if (tb_debug)
         begin
           $display("*** Reading 0x%08x from 0x%02x.", read_data, address);
           $display("");
@@ -319,7 +323,7 @@ module tb_poly1305();
   task write_word(input [11 : 0] address,
                   input [31 : 0] word);
     begin
-      if (DEBUG)
+      if (tb_debug)
         begin
           $display("*** Writing 0x%08x to 0x%02x.", word, address);
           $display("");
@@ -341,7 +345,7 @@ module tb_poly1305();
   //----------------------------------------------------------------
   task write_key(input [255 : 0] key);
     begin
-      if (DEBUG)
+      if (tb_debug)
         begin
           $display("Writing key to the DUT: 0x%064x", key);
         end
@@ -363,9 +367,9 @@ module tb_poly1305();
   //----------------------------------------------------------------
   task write_block(input [127 : 0] block);
     begin
-      if (DEBUG)
+      if (tb_debug)
         begin
-          $display("Writing block to the DUT: 0x%032x", key);
+          $display("Writing block to the DUT: 0x%032x", block);
         end
 
       write_word(ADDR_BLOCK0, block[127  :  96]);
@@ -407,25 +411,27 @@ module tb_poly1305();
       $display("*** test_rfc8439 started.");
       inc_tc_ctr();
 
+      tb_debug = 1;
+
       write_key(256'h85d6be78_57556d33_7f4452fe_42d506a8_0103808a_fb0db2fd_4abff6af_4149f51b);
       write_block(128'h0);
 
       $display("*** test_rfc8439: Running init() with the RFC key.");
-      write_word(ADDR_CTRL, CTRL_INIT_BIT);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_INIT_BIT));
       wait_ready();
       $display("*** test_rfc8439: init() should be completed.");
 
       $display("*** test_rfc8439: Loading the first 16 bytes of message and running next().");
       write_block(128'h43727970_746f6772_61706869_6320466f);
       write_word(ADDR_BLOCKLEN, 32'h10);
-      write_word(ADDR_CTRL, CTRL_NEXT_BIT);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_NEXT_BIT));
       wait_ready();
       $display("*** test_rfc8439: next() should be completed.");
 
       $display("*** test_rfc8439: Loading the second 16 bytes and running next().");
       write_block(128'h72756d20_52657365_61726368_2047726f);
       write_word(ADDR_BLOCKLEN, 32'h10);
-      write_word(ADDR_CTRL, CTRL_NEXT_BIT);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_NEXT_BIT));
       wait_ready();
       $display("*** test_rfc8439: next() should be completed.");
 
@@ -433,18 +439,20 @@ module tb_poly1305();
       $display("*** test_rfc8439: Loading the final 2 bytes and running next().");
       write_block(128'h75700000_00000000_00000000_00000000);
       write_word(ADDR_BLOCKLEN, 32'h2);
-      write_word(ADDR_CTRL, CTRL_NEXT_BIT);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_NEXT_BIT));
       wait_ready();
       $display("*** test_rfc8439: next() should be completed.");
 
 
       $display("*** test_rfc8439: running finish() to get the MAC.");
-      write_word(ADDR_CTRL, CTRL_FINISH_BIT);
+      write_word(ADDR_CTRL, (32'h1 << CTRL_FINISH_BIT));
       wait_ready();
       $display("*** test_rfc8439: finish() should be completed.");
 
       $display("*** test_rfc8439: Checking the generated MAC.");
       check_mac(128'ha8061dc1_305136c6_c22b8baf_0c0127a9);
+
+      tb_debug = 0;
 
       $display("*** test_rfc8439 completed.\n");
     end
@@ -462,6 +470,8 @@ module tb_poly1305();
       $display("");
 
       init_sim();
+
+      reset_dut();
 
       test_rfc8439();
 

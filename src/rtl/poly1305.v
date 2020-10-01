@@ -69,8 +69,8 @@ module poly1305(
   localparam ADDR_KEY7        = 8'h17;
 
   localparam ADDR_BLOCK0      = 8'h20;
-  localparam ADDR_BLOCK0      = 8'h21;
-  localparam ADDR_BLOCK0      = 8'h22;
+  localparam ADDR_BLOCK1      = 8'h21;
+  localparam ADDR_BLOCK2      = 8'h22;
   localparam ADDR_BLOCK3      = 8'h23;
 
   localparam ADDR_MAC0        = 8'h30;
