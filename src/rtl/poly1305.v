@@ -80,7 +80,7 @@ module poly1305(
 
   localparam CORE_NAME0       = 32'h706f6c79; // "poly"
   localparam CORE_NAME1       = 32'h31333035; // "1305"
-  localparam CORE_VERSION     = 32'h302e3130; // "0.10"
+  localparam CORE_VERSION     = 32'h312e3030; // "1.00"
 
 
   //----------------------------------------------------------------
