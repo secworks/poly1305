@@ -57,11 +57,21 @@ the target technology (FPGAs).
 
 ## Implementation results
 ### Xilinx Artix-7
+* Tool:       Vivado 19.2
 * Device:     xc7a200tsbv484-1
 * LUTs:       1644
 * FFs:        1987
 * DSPs:       28
 * Fmax (MHz): 94
+
+
+### Intel Cyclone IV GX
+* Tool:   Quartus Prime 19.1.0
+* Device: EP4CGX22CF19C6
+* LEs:    7938
+* Regs:   2094
+* Mults:  0
+* Fmax    64 MHz
 
 
 ## References
