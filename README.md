@@ -63,7 +63,7 @@ the target technology (FPGAs).
 * LEs:    7938
 * Regs:   2094
 * Mults:  0
-* Fmax    64 MHz
+* Fmax:   64 MHz
 
 
 ### Microchip IGLOO2 ###
@@ -92,7 +92,7 @@ the target technology (FPGAs).
 * LUTs:       1644
 * FFs:        1987
 * DSPs:       28
-* Fmax (MHz): 94
+* Fmax:       94 MHz
 
 
 ## References
