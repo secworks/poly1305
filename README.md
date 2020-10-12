@@ -56,14 +56,6 @@ the target technology (FPGAs).
 
 
 ## Implementation results
-### Xilinx Artix-7
-* Tool:       Vivado 19.2
-* Device:     xc7a200tsbv484-1
-* LUTs:       1644
-* FFs:        1987
-* DSPs:       28
-* Fmax (MHz): 94
-
 
 ### Intel Cyclone IV GX
 * Tool:   Quartus Prime 19.1.0
@@ -72,6 +64,35 @@ the target technology (FPGAs).
 * Regs:   2094
 * Mults:  0
 * Fmax    64 MHz
+
+
+### Microchip IGLOO2 ###
+- Tool: Libero release v12.4
+- Device: M2GL150TS-FCV484
+- LUTs: 3057
+- SLEs: 2885
+- DSPs: 22
+- BRAMs: 0
+- Fmax: 74.8 MHz
+
+
+### Microchip PolarFire ###
+- Tool: Libero release v12.4
+- Device: M2GL090TS-1FG484I
+- LUTs: 3001
+- SLEs: 2812
+- DSPs: 20
+- BRAMs: 0
+- Fmax: 74.1 MHz
+
+
+### Xilinx Artix-7
+* Tool:       Vivado 19.2
+* Device:     xc7a200tsbv484-1
+* LUTs:       1644
+* FFs:        1987
+* DSPs:       28
+* Fmax (MHz): 94
 
 
 ## References
