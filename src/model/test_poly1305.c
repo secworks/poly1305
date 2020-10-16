@@ -1237,41 +1237,43 @@ int testcase_long() {
 
 //------------------------------------------------------------------
 //------------------------------------------------------------------
-void run_tests() {
-  int test_result = 0;
+int run_tests() {
+  int test_results = 0;
 
-  test_result += p1305_bytes0();
-  test_result += p1305_bytes1();
-  test_result += p1305_bytes2();
-  test_result += p1305_bytes6();
-  test_result += p1305_bytes9();
-  test_result += p1305_bytes12();
-  test_result += p1305_bytes15();
-  test_result += p1305_bytes16();
-  test_result += p1305_bytes17();
-  test_result += p1305_bytes32();
-  test_result += p1305_rfc8439();
-  test_result += p1305_test1();
-  test_result += p1305_test2();
-  test_result += testcase_0();
-  test_result += testcase_1();
-  test_result += testcase_2();
-  test_result += testcase_3();
-  test_result += testcase_4();
-  test_result += testcase_5();
-  test_result += testcase_6();
-  test_result += testcase_7();
-  test_result += testcase_8();
-  test_result += testcase_9();
-  test_result += testcase_10();
-  test_result += testcase_11();
-  test_result += testcase_12();
-  test_result += testcase_13();
-  test_result += testcase_14();
-  test_result += testcase_15();
-  test_result += testcase_long();
+  test_results += p1305_bytes0();
+  test_results += p1305_bytes1();
+  test_results += p1305_bytes2();
+  test_results += p1305_bytes6();
+  test_results += p1305_bytes9();
+  test_results += p1305_bytes12();
+  test_results += p1305_bytes15();
+  test_results += p1305_bytes16();
+  test_results += p1305_bytes17();
+  test_results += p1305_bytes32();
+  test_results += p1305_rfc8439();
+  test_results += p1305_test1();
+  test_results += p1305_test2();
+  test_results += testcase_0();
+  test_results += testcase_1();
+  test_results += testcase_2();
+  test_results += testcase_3();
+  test_results += testcase_4();
+  test_results += testcase_5();
+  test_results += testcase_6();
+  test_results += testcase_7();
+  test_results += testcase_8();
+  test_results += testcase_9();
+  test_results += testcase_10();
+  test_results += testcase_11();
+  test_results += testcase_12();
+  test_results += testcase_13();
+  test_results += testcase_14();
+  test_results += testcase_15();
+  test_results += testcase_long();
 
-  printf("Number of failing test cases: %d\n", test_result);
+  printf("Number of failing test cases: %d\n", test_results);
+
+  return test_results;
 }
 
 
@@ -1280,9 +1282,7 @@ void run_tests() {
 //------------------------------------------------------------------
 int main(void) {
   printf("Test of Monocypher Poly1305 function.\n");
-  run_tests();
-
-  return 0;
+  return run_tests();
 }
 
 //======================================================================
