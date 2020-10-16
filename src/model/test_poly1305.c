@@ -1281,7 +1281,7 @@ int run_tests() {
 // int main()
 //------------------------------------------------------------------
 int main(void) {
-  printf("Test of Monocypher Poly1305 function.\n");
+  printf("\nTest of Monocypher Poly1305 function.\n");
   return run_tests();
 }
 
