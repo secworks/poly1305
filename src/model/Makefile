@@ -43,7 +43,7 @@ lib_inc = monocypher.h
 
 all: $(target)
 
-$(target):	$(src) $(lib_src) $(lib_inc) 
+$(target):	$(src) $(lib_src) $(lib_inc)
 	$(CC) $(CC_FLAGS) -o $(target) -I$(lib_inc) $(src) $(lib_src)
 
 clean:
@@ -52,4 +52,3 @@ clean:
 #======================================================================
 # EOF Makefile
 #======================================================================
-
