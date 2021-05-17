@@ -16,7 +16,6 @@ filesets:
     files:
       - src/tb/tb_poly1305.v
       - src/tb/tb_poly1305_core.v
-      - src/tb/tb_poly1305_core.v
       - src/tb/tb_poly1305_final.v
       - src/tb/tb_poly1305_mulacc.v
       - src/tb/tb_poly1305_pblock.v
