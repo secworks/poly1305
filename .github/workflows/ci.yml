@@ -1,0 +1,60 @@
+name: build-openlane-sky130
+on: [push]
+
+jobs:
+  build-poly1305:
+    runs-on: ubuntu-latest
+    env:
+      REPO : poly1305
+      VLNV : secworks:crypto:poly1305
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: poly1305
+      - name: Checkout pdk
+        uses: actions/checkout@v2
+        with:
+          repository: olofk/pdklite
+          path: pdklite
+      - run: echo "PDK_ROOT=$GITHUB_WORKSPACE/pdklite" >> $GITHUB_ENV
+      - run: echo "EDALIZE_LAUNCHER=${GITHUB_WORKSPACE}/$REPO/.github/workflows/openlane_runner.py" >> $GITHUB_ENV
+      - run: pip3 install --user -e "git+https://github.com/olofk/edalize.git#egg=edalize"
+      - run: pip3 install fusesoc
+#      - run: docker pull efabless/openlane:v0.12
+      - run: fusesoc library add $REPO $GITHUB_WORKSPACE/$REPO
+      - run: fusesoc run --target=sky130 $VLNV
+
+  sim-icarus:
+    runs-on: ubuntu-latest
+    env:
+      REPO : poly1305
+      VLNV : secworks:crypto:poly1305
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: poly1305
+      - run: sudo apt install iverilog
+      - run: pip3 install fusesoc
+      - run: fusesoc library add $REPO $GITHUB_WORKSPACE/$REPO
+      - run: fusesoc run --target=tb_poly1305 $VLNV
+      - run: fusesoc run --target=tb_poly1305_core $VLNV
+      - run: fusesoc run --target=tb_poly1305_final $VLNV
+      - run: fusesoc run --target=tb_poly1305_mulacc $VLNV
+      - run: fusesoc run --target=tb_poly1305_pblock $VLNV
+
+  lint-verilator:
+    runs-on: ubuntu-latest
+    env:
+      REPO : poly1305
+      VLNV : secworks:crypto:poly1305
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          path: poly1305
+      - run: sudo apt install verilator
+      - run: pip3 install fusesoc
+      - run: fusesoc library add $REPO $GITHUB_WORKSPACE/$REPO
+      - run: fusesoc run --target=lint $VLNV

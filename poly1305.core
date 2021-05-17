@@ -1,0 +1,63 @@
+CAPI=2:
+
+name : secworks:crypto:poly1305:0
+
+filesets:
+  rtl:
+    files:
+      - src/rtl/poly1305.v
+      - src/rtl/poly1305_core.v
+      - src/rtl/poly1305_final.v
+      - src/rtl/poly1305_mulacc.v
+      - src/rtl/poly1305_pblock.v
+    file_type : verilogSource
+
+  tb:
+    files:
+      - src/tb/tb_poly1305.v
+      - src/tb/tb_poly1305_core.v
+      - src/tb/tb_poly1305_core.v
+      - src/tb/tb_poly1305_final.v
+      - src/tb/tb_poly1305_mulacc.v
+      - src/tb/tb_poly1305_pblock.v
+    file_type : verilogSource
+
+  openlane: {files : [data/sky130.tcl : {file_type : tclSource}]}
+
+targets:
+  default:
+    filesets: [rtl]
+
+  lint:
+    default_tool : verilator
+    filesets : [rtl]
+    tools:
+      verilator:
+        mode : lint-only
+    toplevel : poly1305
+
+  sky130:
+    default_tool: openlane
+    filesets: [rtl, openlane]
+    toplevel: poly1305
+
+  tb_poly1305: &tb
+    default_tool: icarus
+    filesets: [rtl, tb]
+    toplevel : tb_poly1305
+
+  tb_poly1305_core:
+    <<: *tb
+    toplevel : tb_poly1305_core
+
+  tb_poly1305_final:
+    <<: *tb
+    toplevel : tb_poly1305_final
+
+  tb_poly1305_mulacc:
+    <<: *tb
+    toplevel : tb_poly1305_mulacc
+
+  tb_poly1305_pblock:
+    <<: *tb
+    toplevel : tb_poly1305_pblock
