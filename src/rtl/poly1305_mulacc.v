@@ -35,6 +35,8 @@
 //
 //======================================================================
 
+`default_nettype none
+
 module poly1305_mulacc(
                        input wire           clk,
                        input wire           reset_n,

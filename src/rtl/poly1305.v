@@ -36,6 +36,8 @@
 //
 //======================================================================
 
+`default_nettype none
+
 module poly1305(
                 input wire           clk,
                 input wire           reset_n,
