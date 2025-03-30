@@ -15,6 +15,15 @@ core is compatible wih the Poly1305 described in RFC 8439 [2].
 The core is functionally based on, and tested against the Poly1305
 implementation in Monocypher [3].
 
+
+### Contact information ##
+
+Assured provides customer support including customization, integration
+and system development related to the core. For more informantion,
+please contact [Assured Security
+Consultants](https://www.assured.se/contact).
+
+
 ## Usage
 The core (poly1305_core.v) has a wide interface with 256 bit key,
 128 bit blocks and 128 bit MAC tag as output.
